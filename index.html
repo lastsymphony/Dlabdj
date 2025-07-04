@@ -1,235 +1,216 @@
 <!DOCTYPE html><html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Komikcast - Scraper Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Komiku Web App</title>
   <style>
     body {
-      font-family: sans-serif;
       margin: 0;
-      background: #121212;
-      color: #f1f1f1;
+      font-family: Arial, sans-serif;
+      background: #000;
+      color: #fff;
+    }
+    header {
+      background: #2c7be5;
+      padding: 15px;
+      text-align: center;
+      font-size: 20px;
+      color: #fff;
     }
     .container {
-      padding: 20px;
-      max-width: 1200px;
+      max-width: 960px;
       margin: auto;
-    }
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 1rem;
-    }
-    .controls input, .controls select {
       padding: 10px;
-      font-size: 1rem;
-      background: #1e1e1e;
-      color: #fff;
-      border: 1px solid #333;
-      border-radius: 5px;
     }
-    .grid {
+    .section {
+      margin-top: 30px;
+    }
+    .section h2 {
+      margin-bottom: 10px;
+    }
+    .gallery {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 1rem;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 16px;
     }
     .card {
-      background: #1e1e1e;
-      border-radius: 10px;
+      background: #111;
+      border-radius: 8px;
       overflow: hidden;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
-      transition: transform 0.2s ease;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
       cursor: pointer;
+      transition: transform 0.2s;
     }
     .card:hover {
-      transform: scale(1.03);
+      transform: scale(1.05);
     }
     .card img {
       width: 100%;
-      height: 280px;
-      object-fit: cover;
+      height: auto;
     }
-    .card-content {
+    .card-body {
       padding: 10px;
+      text-align: center;
     }
-    .card-content h3 {
-      font-size: 1rem;
+    .chapter-title {
+      text-align: center;
+      font-size: 18px;
+      margin: 10px 0;
+      color: #eee;
+    }
+    .images img {
+      width: 100%;
+      display: block;
       margin: 0;
+      border: none;
     }
-    .meta {
-      font-size: 0.8rem;
-      color: #ccc;
-      margin-top: 5px;
-    }
-    .pagination {
+    .nav-buttons {
       display: flex;
-      justify-content: center;
-      margin-top: 2rem;
+      justify-content: space-between;
+      margin: 20px 0;
       gap: 10px;
     }
-    .pagination button {
-      padding: 8px 16px;
-      background: #333;
+    .nav-buttons button {
+      flex: 1;
+      background: #2c7be5;
       color: white;
+      padding: 12px;
+      font-size: 16px;
       border: none;
+      border-radius: 6px;
       cursor: pointer;
     }
-    .pagination button:disabled {
-      background: #555;
-      cursor: not-allowed;
+    .nav-buttons button:hover {
+      background: #1a5dc9;
     }
-    .detail {
-      background: #1c1c1c;
-      padding: 1rem;
-      margin-top: 2rem;
-      border-radius: 10px;
+    .back-btn, .chapter-btn {
+      margin: 10px 5px;
+      padding: 10px 16px;
+      font-size: 14px;
+      background: #2c7be5;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
     }
-    .detail h2 { margin-top: 0; }
-    .chapter-list { margin-top: 1rem; }
-    .chapter-item { margin-bottom: 8px; cursor: pointer; color: #4fc3f7; }
-    .reader {
-      margin-top: 2rem;
-      display: none;
+    .genres span {
+      display: inline-block;
+      background: #333;
+      color: #fff;
+      padding: 4px 10px;
+      margin: 3px;
+      border-radius: 20px;
+      font-size: 13px;
     }
-    .reader img {
+    #searchInput {
       width: 100%;
-      max-width: 800px;
-      display: block;
-      margin: 10px auto;
-      border-radius: 8px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 4px;
+      border: none;
+      margin: 20px 0;
     }
   </style>
 </head>
 <body>
+  <header id="appTitle">Komiku - Web Manga</header>
   <div class="container">
-    <h1>Komikcast Scraper</h1>
-    <div class="controls">
-      <input type="text" id="searchInput" placeholder="Cari judul komik...">
-      <select id="typeFilter">
-        <option value="">Semua Tipe</option>
-        <option value="Manga">Manga</option>
-        <option value="Manhwa">Manhwa</option>
-        <option value="Manhua">Manhua</option>
-      </select>
-    </div>
-    <div id="komik-list" class="grid"></div>
-    <div class="pagination">
-      <button id="prev-btn">⬅ Prev</button>
-      <button id="next-btn">Next ➡</button>
-    </div>
-    <div id="detail-view" class="detail" style="display: none;"></div>
-    <div id="reader" class="reader"></div>
+    <input type="text" id="searchInput" placeholder="🔍 Cari manga..." oninput="searchManga(this.value)">
+    <div id="sections"></div>
+    <div id="detail" style="display:none;"></div>
+    <div id="chapter" style="display:none;"></div>
   </div>
   <script>
-    let currentPage = 1;
-    let currentData = [];async function loadKomik(page = 1) {
-  const url = `https://api.allorigins.win/raw?url=` + encodeURIComponent(`https://weeb-scraper.onrender.com/api/komikcast?page=${page}`);
-  const container = document.getElementById('komik-list');
-  container.innerHTML = '<p>Loading...</p>';
-
-  try {
-    const res = await fetch(url);
+    const API = "https://c-lilac-seven.vercel.app";
+    const sectionList = ["rekomendasi", "trending", "terbaru-2", "terbaru", "pustaka", "berwarna", "komik-populer"];
+    const sectionsDiv = document.getElementById("sections");
+    const detail = document.getElementById("detail");
+    const chapter = document.getElementById("chapter");async function loadSections() {
+  sectionsDiv.innerHTML = "";
+  for (const section of sectionList) {
+    const res = await fetch(`${API}/${section}`);
     const data = await res.json();
-    currentData = data.data || [];
-    currentPage = page;
-    displayKomik(currentData);
-
-    document.getElementById('prev-btn').disabled = !data.prev_page;
-    document.getElementById('next-btn').disabled = !data.next_page;
-
-    document.getElementById('prev-btn').onclick = () => loadKomik(currentPage - 1);
-    document.getElementById('next-btn').onclick = () => loadKomik(currentPage + 1);
-  } catch (err) {
-    container.innerHTML = `<p>❌ Gagal memuat data: ${err.message}</p>`;
+    const sectionDiv = document.createElement("div");
+    sectionDiv.className = "section";
+    sectionDiv.innerHTML = `<h2>${section.replace(/-/g, ' ').toUpperCase()}</h2><div class='gallery'>` +
+      data.map(manga => `
+        <div class="card" onclick="loadDetail('${manga.apiDetailLink}')">
+          <img src="${manga.thumbnail}" alt="${manga.title}">
+          <div class="card-body">
+            <h4>${manga.title}</h4>
+          </div>
+        </div>
+      `).join('') + '</div>';
+    sectionsDiv.appendChild(sectionDiv);
   }
 }
 
-function displayKomik(list) {
-  const container = document.getElementById('komik-list');
-  container.innerHTML = '';
-  document.getElementById('detail-view').style.display = 'none';
-  document.getElementById('reader').style.display = 'none';
-
-  const keyword = document.getElementById('searchInput').value.toLowerCase();
-  const type = document.getElementById('typeFilter').value;
-  const filtered = list.filter(k => k.title.toLowerCase().includes(keyword) && (!type || k.type === type));
-
-  if (filtered.length === 0) {
-    container.innerHTML = '<p>Tidak ada hasil ditemukan.</p>';
-    return;
-  }
-
-  filtered.forEach(item => {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.onclick = () => showDetail(item.param);
-    card.innerHTML = `
-      <img src="${item.thumbnail}" alt="${item.title}" />
-      <div class="card-content">
-        <h3>${item.title}</h3>
-        <div class="meta">
-          <p>Type: ${item.type}</p>
-          <p>Rating: ${item.rating}</p>
+async function searchManga(keyword) {
+  if (!keyword) return loadSections();
+  const res = await fetch(`${API}/search?q=${encodeURIComponent(keyword)}`);
+  const data = await res.json();
+  sectionsDiv.innerHTML = `<div class='section'><h2>HASIL PENCARIAN</h2><div class='gallery'>` +
+    data.map(manga => `
+      <div class="card" onclick="loadDetail('${manga.apiDetailLink}')">
+        <img src="${manga.thumbnail}" alt="${manga.title}">
+        <div class="card-body">
+          <h4>${manga.title}</h4>
         </div>
       </div>
-    `;
-    container.appendChild(card);
-  });
+    `).join('') + '</div></div>';
 }
 
-async function showDetail(param) {
-  const url = `https://api.allorigins.win/raw?url=` + encodeURIComponent(`https://weeb-scraper.onrender.com/api/komikcast/${param}`);
-  const detailDiv = document.getElementById('detail-view');
-  const readerDiv = document.getElementById('reader');
-  detailDiv.innerHTML = '<p>Loading detail...</p>';
-  detailDiv.style.display = 'block';
-  readerDiv.style.display = 'none';
-
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
-    const d = data.data;
-
-    detailDiv.innerHTML = `
-      <h2>${d.title}</h2>
-      <img src="${d.thumbnail}" alt="${d.title}" style="max-width:200px; float:right; margin-left:1rem;">
-      <p><strong>Author:</strong> ${d.meta_info.author}</p>
-      <p><strong>Released:</strong> ${d.meta_info.released}</p>
-      <p><strong>Status:</strong> ${d.meta_info.status}</p>
-      <p><strong>Type:</strong> ${d.meta_info.type}</p>
-      <p><strong>Updated on:</strong> ${d.meta_info.updated_on}</p>
-      <p><strong>Genre:</strong> ${d.genre.join(', ')}</p>
-      <p><strong>Synopsis:</strong><br>${d.synopsis}</p>
-      <div class="chapter-list">
-        <h3>Chapters:</h3>
-        ${d.chapters.map(c => `<div class="chapter-item" onclick="loadChapter('${c.slug}')">${c.chapter} - ${c.release}</div>`).join('')}
-      </div>
-    `;
-  } catch (err) {
-    detailDiv.innerHTML = `<p>Gagal memuat detail: ${err.message}</p>`;
-  }
+async function loadDetail(apiLink) {
+  sectionsDiv.style.display = "none";
+  chapter.style.display = "none";
+  detail.style.display = "block";
+  const res = await fetch(API + apiLink);
+  const data = await res.json();
+  detail.innerHTML = `
+    <button class="back-btn" onclick="backToGallery()">← Kembali</button>
+    <h2>${data.title}</h2>
+    <p><strong>Pengarang:</strong> ${data.info["Pengarang"]}</p>
+    <p><strong>Status:</strong> ${data.info["Status"]}</p>
+    <p><strong>Genre:</strong> ${data.genres.map(g => `<span>${g}</span>`).join('')}</p>
+    <p>${data.description}</p>
+    <h3>Chapter</h3>
+    <button class="chapter-btn" onclick="loadChapter('${data.firstChapter.apiLink}')">Pertama</button>
+    <button class="chapter-btn" onclick="loadChapter('${data.latestChapter.apiLink}')">Terbaru</button>
+  `;
 }
 
-async function loadChapter(slug) {
-  const url = `https://api.allorigins.win/raw?url=` + encodeURIComponent(`https://weeb-scraper.onrender.com/api/komikcast/chapter/${slug}`);
-  const readerDiv = document.getElementById('reader');
-  readerDiv.innerHTML = '<p>Memuat chapter...</p>';
-  readerDiv.style.display = 'block';
-
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
-    readerDiv.innerHTML = data.data.map(src => `<img src="${src}" loading="lazy">`).join('');
-  } catch (err) {
-    readerDiv.innerHTML = `<p>❌ Gagal memuat gambar chapter: ${err.message}</p>`;
-  }
+async function loadChapter(apiLink) {
+  sectionsDiv.style.display = "none";
+  detail.style.display = "none";
+  chapter.style.display = "block";
+  document.getElementById("appTitle").textContent = "Baca Komik";
+  chapter.innerHTML = `<div class="chapter-title">⏳ Memuat...</div>`;
+  const res = await fetch(API + apiLink);
+  const data = await res.json();
+  chapter.innerHTML = `
+    <div class="chapter-title">${data.chapterInfo?.Judul || data.title}</div>
+    <div class="chapter-title">Rilis: ${data.chapterInfo?.["Tanggal Rilis"] || "-"}</div>
+    <div class="images">
+      ${data.images.map(src => `<img src="${src}" alt="page">`).join('') || '<p>❌ Gambar tidak tersedia.</p>'}
+    </div>
+    <div class="nav-buttons">
+      ${data.navigation.prevChapter ? `<button onclick="loadChapter('${data.navigation.prevChapter.apiLink}')">⬅ Sebelumnya</button>` : ""}
+      ${data.navigation.nextChapter ? `<button onclick="loadChapter('${data.navigation.nextChapter.apiLink}')">Selanjutnya ➡</button>` : ""}
+    </div>
+    <div style="text-align:center;margin-top:20px">
+      <button class="back-btn" onclick="loadDetail('${data.navigation.allChapters}')">⬅ Kembali ke Detail</button>
+    </div>
+  `;
 }
 
-document.getElementById('searchInput').addEventListener('input', () => displayKomik(currentData));
-document.getElementById('typeFilter').addEventListener('change', () => displayKomik(currentData));
+function backToGallery() {
+  sectionsDiv.style.display = "block";
+  detail.style.display = "none";
+  chapter.style.display = "none";
+  document.getElementById("appTitle").textContent = "Komiku - Web Manga";
+}
 
-loadKomik();
+loadSections();
 
   </script>
 </body>
