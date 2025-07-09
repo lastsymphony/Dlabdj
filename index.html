@@ -1,217 +1,542 @@
-<!DOCTYPE html><html lang="id">
+<!DOCTYPE html>
+<html lang="id" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Komiku Web App</title>
+  <meta http-equiv="refresh" content="0; url=https://lastsymphony.github.io/KyTxR5pHaEn2">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Downloader - Aditya Jatayu</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #000;
-      color: #fff;
+    .modal-enter {
+      opacity: 0;
+      transform: scale(0.95);
     }
-    header {
-      background: #2c7be5;
-      padding: 15px;
-      text-align: center;
-      font-size: 20px;
-      color: #fff;
+    .modal-enter-active {
+      opacity: 1;
+      transform: scale(1);
+      transition: all 0.2s ease-out;
     }
-    .container {
-      max-width: 960px;
-      margin: auto;
-      padding: 10px;
+    .modal-leave {
+      opacity: 1;
+      transform: scale(1);
     }
-    .section {
-      margin-top: 30px;
+    .modal-leave-active {
+      opacity: 0;
+      transform: scale(0.95);
+      transition: all 0.15s ease-in;
     }
-    .section h2 {
-      margin-bottom: 10px;
-    }
-    .gallery {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 16px;
-    }
-    .card {
-      background: #111;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-    .card:hover {
-      transform: scale(1.05);
-    }
-    .card img {
-      width: 100%;
-      height: auto;
-    }
-    .card-body {
-      padding: 10px;
-      text-align: center;
-    }
-    .chapter-title {
-      text-align: center;
-      font-size: 18px;
-      margin: 10px 0;
-      color: #eee;
-    }
-    .images img {
-      width: 100%;
-      display: block;
-      margin: 0;
-      border: none;
-    }
-    .nav-buttons {
-      display: flex;
-      justify-content: space-between;
-      margin: 20px 0;
-      gap: 10px;
-    }
-    .nav-buttons button {
-      flex: 1;
-      background: #2c7be5;
-      color: white;
-      padding: 12px;
-      font-size: 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .nav-buttons button:hover {
-      background: #1a5dc9;
-    }
-    .back-btn, .chapter-btn {
-      margin: 10px 5px;
-      padding: 10px 16px;
-      font-size: 14px;
-      background: #2c7be5;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .genres span {
-      display: inline-block;
-      background: #333;
-      color: #fff;
-      padding: 4px 10px;
-      margin: 3px;
-      border-radius: 20px;
-      font-size: 13px;
-    }
-    #searchInput {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 4px;
-      border: none;
-      margin: 20px 0;
-    }
-  </style>
-</head>
-<body>
-  <header id="appTitle">Komiku - Web Manga</header>
-  <div class="container">
-    <input type="text" id="searchInput" placeholder="🔍 Cari manga..." oninput="searchManga(this.value)">
-    <div id="sections"></div>
-    <div id="detail" style="display:none;"></div>
-    <div id="chapter" style="display:none;"></div>
-  </div>
-  <script>
-    const API = "https://c-lilac-seven.vercel.app";
-    const sectionList = ["rekomendasi", "trending", "terbaru-2", "terbaru", "pustaka", "berwarna", "komik-populer"];
-    const sectionsDiv = document.getElementById("sections");
-    const detail = document.getElementById("detail");
-    const chapter = document.getElementById("chapter");async function loadSections() {
-  sectionsDiv.innerHTML = "";
-  for (const section of sectionList) {
-    const res = await fetch(`${API}/${section}`);
-    const data = await res.json();
-    const sectionDiv = document.createElement("div");
-    sectionDiv.className = "section";
-    sectionDiv.innerHTML = `<h2>${section.replace(/-/g, ' ').toUpperCase()}</h2><div class='gallery'>` +
-      data.map(manga => `
-        <div class="card" onclick="loadDetail('${manga.apiDetailLink}')">
-          <img src="${manga.thumbnail}" alt="${manga.title}">
-          <div class="card-body">
-            <h4>${manga.title}</h4>
-          </div>
-        </div>
-      `).join('') + '</div>';
-    sectionsDiv.appendChild(sectionDiv);
+    @keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
-async function searchManga(keyword) {
-  if (!keyword) return loadSections();
-  const res = await fetch(`${API}/search?q=${encodeURIComponent(keyword)}`);
-  const data = await res.json();
-  sectionsDiv.innerHTML = `<div class='section'><h2>HASIL PENCARIAN</h2><div class='gallery'>` +
-    data.map(manga => `
-      <div class="card" onclick="loadDetail('${manga.apiDetailLink}')">
-        <img src="${manga.thumbnail}" alt="${manga.title}">
-        <div class="card-body">
-          <h4>${manga.title}</h4>
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out;
+}
+  </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-start p-6 space-y-6">
+<div id="offline-banner" class="hidden fixed inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-800 backdrop-blur-sm flex flex-col items-center justify-center text-white z-[9999] p-6 animate-fadeIn">
+  <div class="text-red-500 mb-4">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 animate-pulse drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18.364 5.636l-12.728 12.728m0-12.728l12.728 12.728" />
+    </svg>
+  </div>
+  <h2 class="text-3xl font-extrabold bg-gradient-to-r from-red-500 via-pink-500 to-purple-500 bg-clip-text text-transparent mb-3 drop-shadow-md">Koneksi Terputus!</h2>
+  <p class="text-gray-300 text-sm mb-6 text-center">Sepertinya kamu sedang offline. Periksa jaringan internet kamu lalu coba kembali.</p>
+  <button onclick="checkConnection()" class="px-6 py-3 rounded-md bg-cyan-500 hover:bg-cyan-600 text-white font-semibold transition shadow-lg hover:shadow-cyan-500/50 focus:outline-none">
+    🔄 Coba Lagi
+  </button>
+</div>
+<!-- Navbar -->
+<nav class="w-full fixed top-0 left-0 z-50 backdrop-blur-md bg-white/10 border-b border-white/10 text-white">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+    <span class="text-cyan-400 font-bold text-lg">Media Downloader</span>
+
+    <!-- Hamburger button -->
+    <button id="navToggle" class="md:hidden text-white focus:outline-none">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<!-- Spacer -->
+<div class="h-[64px]"></div>
+
+<!-- Side Menu Overlay -->
+<div id="sideNav" class="fixed top-0 right-0 w-full sm:w-64 h-full bg-gray-800/20 backdrop-blur-md text-white transform translate-x-full transition-transform duration-500 ease-in-out z-50">
+  <div class="flex justify-between items-center px-4 py-4 border-b border-gray-700">
+    <span class="text-cyan-400 font-bold"> Navigasi</span>
+    <button onclick="closeNav()" class="text-white hover:text-red-400">
+      ✖
+    </button>
+  </div>
+  <div class="flex flex-col gap-4 px-6 py-6 text-sm font-medium">
+    <a href="https://adityajatayu.my.id/" target="_blank" class="hover:text-cyan-400 transition">Portfolio</a>
+    <a href="https://katheryne.biz.id/" target="_blank" class="hover:text-cyan-400 transition">Gallery Public</a>
+    <a href="https://lastsymphony.github.io/Generator-json-gallery-/" target="_blank" class="hover:text-cyan-400 transition">JSON Gallery Generator</a>
+    <a href="https://instagram.com/lastsymph" target="_blank" class="hover:text-cyan-400 transition">Instagram</a>
+    <a href="mailto:jatayupaint01@gmail.com" class="hover:text-cyan-400 transition">Email</a>
+    <a href="https://github.com/lastsymphony" target="_blank" class="hover:text-cyan-400 transition">GitHub</a>
+    <a href="https://m.youtube.com/channel/UC-8aUGvvADFQKWBr6n2-mSg/videos" target="_blank" class="hover:text-cyan-400 transition">YouTube</a>
+  </div>
+</div>
+
+<!-- Overlay background when menu open -->
+<div id="navBackdrop" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40" onclick="closeNav()"></div>
+
+  <!--h1 class="text-3xl font-bold text-cyan-400">Sosmed Downloader</h1-->
+  <p class="text-white-400 text-sm mt-1">
+  Still under development
+</p>
+<p class="text-gray-400 text-sm mt-1">
+  Report bug's on E-mail / Dm Instagram
+</p>
+  <div class="flex flex-col items-center gap-4 w-full max-w-md">
+  <div class="relative w-full">
+    <input type="text" id="urlInput" placeholder="Tempel linknya di sini"
+      class="w-full px-4 py-2 pr-12 rounded-md bg-gray-800 border border-white-600 focus:outline-none focus:ring-2 focus:ring-cyan-500" />
+    
+    <button onclick="pasteFromClipboard()" class="absolute inset-y-0 right-0 flex items-center px-3 text-cyan-400 hover:text-white">
+      <!-- SVG Icon Clipboard -->
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M8 6H5a2 2 0 00-2 2v10a2 2 0 002 2h11a2 2 0 002-2v-3m-4-13h6a2 2 0 012 2v6m-6-8v4a2 2 0 002 2h4" />
+      </svg>
+    </button>
+  </div>
+
+  <div class="flex flex-wrap justify-center gap-3">
+    <button onclick="downloadIG()"
+      class="bg-cyan-500 hover:bg-cyan-600 transition text-white px-6 py-2 rounded-md font-medium">
+      Download Instagram
+    </button>
+    
+    <button onclick="downloadFB()"
+  class="bg-blue-500 hover:bg-blue-600 transition text-white px-6 py-2 rounded-md font-medium">
+  Download Facebook
+</button>
+
+<button onclick="downloadTT()"
+  class="bg-pink-500 hover:bg-pink-600 transition text-white px-6 py-2 rounded-md font-medium">
+  Download Tiktok
+</button>
+
+<!--<button onclick="downloadYT()"
+  class="bg-red-500 hover:bg-red-600 transition text-white px-6 py-2 rounded-md font-medium">
+  Download YouTube </button>-->
+
+    <button onclick="resetForm()"
+      class="bg-red-500 hover:bg-red-600 transition text-white px-6 py-2 rounded-md font-medium">
+      Reset
+    </button>
+  </div>
+</div>
+
+  <div id="result" class="transition-all duration-500 ease-in-out w-full max-w-3xl space-y-8 mt-6 text-center"></div>
+
+  <!-- Modal -->
+  <div id="imgModal" class="fixed inset-0 bg-black bg-opacity-80 hidden items-center justify-center z-50">
+    <div class="relative">
+      <img id="modalImg" src="" class="max-w-[90vw] max-h-[90vh] rounded-lg shadow-lg" />
+      <button onclick="closeModal()" class="absolute top-2 right-2 text-white bg-gray-800 hover:bg-gray-700 p-2 rounded-full">✖</button>
+    </div>
+  </div>
+  
+  <!-- Tutorial Penggunaan -->
+<section class="w-full max-w-2xl text-left mt-12 p-6 bg-gray-800 border border-gray-700 rounded-lg shadow-lg">
+  <h2 class="text-xl font-semibold text-cyan-400 mb-3">📌 Cara Menggunakan</h2>
+  <ol class="list-decimal list-inside text-gray-300 space-y-2 text-sm leading-relaxed">
+    <li>Buka aplikasi <span class="text-white font-medium">Instagram</span>, <span class="text-white font-medium">Facebook</span>, atau <span class="text-white font-medium">TikTok</span>.</li>
+    <li>Salin tautan (link) dari media yang ingin kamu download.</li>
+    <li>Tempelkan link tersebut di kolom input di atas atau juga bisa tekan tombol disamping nya.</li>
+    <li>Pilih tombol sesuai platform:
+      <span class="text-cyan-400">Download</span> untuk Instagram,
+      <span class="text-blue-400">Download Facebook</span>, atau
+      <span class="text-pink-400">Download Tiktok</span>.
+    </li>
+    <li>Tunggu beberapa detik hingga media ditampilkan.</li>
+    <li>Tekan tombol <span class="text-green-400">⬇ Download</span> di bawah media untuk menyimpannya.</li>
+  </ol>
+</section>
+  <!-- Kolom Komentar Commento -->
+<section class="w-full max-w-2xl text-left mt-12 p-6 bg-gray-800 border border-gray-700 rounded-lg shadow-lg">
+  <h2 class="text-xl font-semibold text-cyan-400 mb-3">💬 Komentar Pengunjung</h2>
+  <div id="commento"></div>
+</section>
+
+<script defer src="https://cdn.commento.io/js/commento.js"></script>
+ <!--footer-->
+<footer class="mt-10 w-full border-t border-gray-700 pt-6 pb-4 text-center text-sm text-gray-400">
+  Dibuat dengan ❤️ oleh <span class="text-cyan-400 font-medium">Aditya Jatayu </span> · © 2025
+</footer>
+  <script>
+  	const navToggle = document.getElementById("navToggle");
+  const sideNav = document.getElementById("sideNav");
+  const backdrop = document.getElementById("navBackdrop");
+
+  navToggle.addEventListener("click", () => {
+    sideNav.classList.remove("translate-x-full");
+    sideNav.classList.add("translate-x-0");
+    backdrop.classList.remove("hidden");
+  });
+
+  function closeNav() {
+    sideNav.classList.remove("translate-x-0");
+    sideNav.classList.add("translate-x-full");
+    backdrop.classList.add("hidden");
+  }
+    async function downloadIG() {
+      const url = document.getElementById('urlInput').value.trim();
+      const resultDiv = document.getElementById('result');
+      if (!url) return resultDiv.innerHTML = "<p class='text-yellow-400'>⚠️ Link tidak boleh kosong.</p>";
+
+      resultDiv.innerHTML = "<p class='text-gray-400 animate-pulse'>⏳ Mengambil data...</p>";
+
+      const encodedKey = "S3lUeFI1cEhhRW4y"; 
+const getAPIKey = () => atob("S3lU" + "eFI1" + "cEhh" + "RW4y");
+const apiKey = getAPIKey();
+const apiUrl = `https://api.neoxr.eu/api/ig?url=${encodeURIComponent(url)}&apikey=${apiKey}`;
+      
+      try {
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+
+        if (!data.status || !data.data || data.data.length === 0) {
+          resultDiv.innerHTML = "<p class='text-red-500'>❌ Media tidak ditemukan.</p>";
+          return;
+        }
+
+        resultDiv.innerHTML = "";
+
+        data.data.forEach((media, index) => {
+          const mediaUrl = media.url;
+          const type = media.type;
+
+          if (type === "mp4") {
+            resultDiv.innerHTML += `
+              <div>
+                <p class="mb-2 text-cyan-300">Media ${index + 1}:</p>
+                <video controls autoplay muted src="${mediaUrl}" class="mx-auto w-full h-auto rounded-lg shadow-lg max-w-screen-sm md:max-w-md"></video>
+                <a href="${mediaUrl}" download>
+                  <button class="mt-2 bg-cyan-600 hover:bg-cyan-700 transition px-4 py-2 rounded-md">⬇ Download Video ${index + 1}</button>
+                </a>
+              </div>
+            `;
+          } else {
+            resultDiv.innerHTML += `
+              <div>
+                <p class="mb-2 text-cyan-300">Media ${index + 1}:</p>
+                <img src="${mediaUrl}" onclick="showModal('${mediaUrl}')" class="cursor-pointer w-full h-auto max-w-screen-sm md:max-w-xs mx-auto rounded-lg shadow-lg hover:scale-105 transition" />
+                <a href="${mediaUrl}" download>
+                  <button class="mt-2 bg-cyan-600 hover:bg-cyan-700 transition px-4 py-2 rounded-md">⬇ Download Gambar ${index + 1}</button>
+                </a>
+              </div>
+            `;
+          }
+        });
+
+      } catch (err) {
+        console.error(err);
+        resultDiv.innerHTML = "<p class='text-red-500'>❌ Gagal menghubungi API.</p>";
+      }
+    }
+
+    function resetForm() {
+      document.getElementById('urlInput').value = '';
+      document.getElementById('result').innerHTML = '';
+    }
+
+    function showModal(url) {
+      const modal = document.getElementById("imgModal");
+      const img = document.getElementById("modalImg");
+      img.src = url;
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
+    
+    async function pasteFromClipboard() {
+  try {
+    const text = await navigator.clipboard.readText();
+    document.getElementById('urlInput').value = text;
+  } catch (err) {
+    alert("kasih izin akses clipboard dulu bang.");
+    console.error(err);
+  }
+}
+
+resultDiv.innerHTML = "";
+resultDiv.classList.remove("opacity-0");
+resultDiv.classList.add("opacity-100");
+
+    function closeModal() {
+      const modal = document.getElementById("imgModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+    
+    async function downloadFB() {
+  const url = document.getElementById('urlInput').value.trim();
+  const resultDiv = document.getElementById('result');
+  const encodedKey = "S3lUeFI1cEhhRW4y"; 
+const getAPIKey = () => atob("S3lU" + "eFI1" + "cEhh" + "RW4y");
+const apiKey = getAPIKey();
+
+  if (!url) {
+    resultDiv.innerHTML = "<p class='text-yellow-400'>⚠️ Link tidak boleh kosong.</p>";
+    return;
+  }
+
+  resultDiv.innerHTML = "<p class='text-gray-400 animate-pulse'>⏳ Mengambil data FB...</p>";
+const apiUrl = `https://api.neoxr.eu/api/fb?url=${encodeURIComponent(url)}&apikey=${apiKey}`;
+  
+
+  try {
+    const res = await fetch(apiUrl);
+    const json = await res.json();
+
+    if (!json.status || !json.data || json.data.length === 0) {
+      resultDiv.innerHTML = "<p class='text-red-500'>❌ Video tidak ditemukan atau API key salah.</p>";
+      return;
+    }
+
+    resultDiv.innerHTML = "<p class='text-cyan-300 mb-4'>🎥 Video Tersedia:</p>";
+
+    json.data.forEach((item, index) => {
+      resultDiv.innerHTML += `
+        <div class="mb-6">
+          <p class="text-white font-semibold mb-2">Kualitas: ${item.quality}</p>
+          <video controls src="${item.url}" class="mx-auto rounded-lg w-full max-w-md mb-2"></video>
+          <a href="${item.url}" download>
+            <button class="bg-blue-600 hover:bg-blue-700 transition px-4 py-2 rounded-md text-white">⬇ Download ${item.quality}</button>
+          </a>
         </div>
-      </div>
-    `).join('') + '</div></div>';
+      `;
+    });
+
+  } catch (err) {
+    console.error(err);
+    resultDiv.innerHTML = "<p class='text-red-500'>❌ Gagal menghubungi API.</p>";
+  }
 }
 
-async function loadDetail(apiLink) {
-  sectionsDiv.style.display = "none";
-  chapter.style.display = "none";
-  detail.style.display = "block";
-  const res = await fetch(API + apiLink);
-  const data = await res.json();
-  detail.innerHTML = `
-    <button class="back-btn" onclick="backToGallery()">← Kembali</button>
-    <h2>${data.title}</h2>
-    <p><strong>Pengarang:</strong> ${data.info["Pengarang"]}</p>
-    <p><strong>Status:</strong> ${data.info["Status"]}</p>
-    <p><strong>Genre:</strong> ${data.genres.map(g => `<span>${g}</span>`).join('')}</p>
-    <p>${data.description}</p>
-    <h3>Chapter</h3>
-    <button class="chapter-btn" onclick="loadChapter('${data.firstChapter.apiLink}')">Pertama</button>
-    <button class="chapter-btn" onclick="loadChapter('${data.latestChapter.apiLink}')">Terbaru</button>
-  `;
+async function downloadTT() {
+  const url = document.getElementById('urlInput').value.trim();
+  const resultDiv = document.getElementById('result');
+  const encodedKey = "S3lUeFI1cEhhRW4y"; 
+const getAPIKey = () => atob("S3lU" + "eFI1" + "cEhh" + "RW4y");
+const apiKey = getAPIKey();
+
+  if (!url) {
+    resultDiv.innerHTML = "<p class='text-yellow-400'>⚠️ Link tidak boleh kosong.</p>";
+    return;
+  }
+
+  resultDiv.innerHTML = "<p class='text-gray-400 animate-pulse'>⏳ Mengambil data TikTok...</p>";
+const apiUrl = `https://api.neoxr.eu/api/tiktok?url=${encodeURIComponent(url)}&apikey=${apiKey}`;
+  
+
+  try {
+    const res = await fetch(apiUrl);
+    const json = await res.json();
+
+    if (!json.status || !json.data) {
+      resultDiv.innerHTML = "<p class='text-red-500'>❌ Data tidak valid.</p>";
+      return;
+    }
+
+    const { video, videoWM, audio, photo, caption, author } = json.data;
+    resultDiv.innerHTML = "";
+
+    // Caption & author
+    if (caption || author?.nickname) {
+      resultDiv.innerHTML += `
+        <div class="mb-4 text-sm text-gray-300">
+          <p class="mb-1">👤 <span class="text-white font-medium">${author?.nickname || 'Pengguna TikTok'}</span></p>
+          <p>📝 ${caption || 'Tanpa caption'}</p>
+        </div>
+      `;
+    }
+
+    // Photo (jika tersedia)
+    if (photo && Array.isArray(photo)) {
+      resultDiv.innerHTML += `<p class='text-cyan-300 font-semibold mb-2'>📸 Postingan Foto:</p>`;
+      photo.forEach((img, index) => {
+        resultDiv.innerHTML += `
+          <div class="mb-4">
+            <img src="${img}" onclick="showModal('${img}')" class="cursor-pointer mx-auto rounded-lg max-w-xs shadow-lg hover:scale-105 transition" />
+            <a href="${img}" download>
+              <button class="mt-2 bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded text-white">⬇ Download Gambar ${index + 1}</button>
+            </a>
+          </div>
+        `;
+      });
+    }
+
+    // Video No WM
+    if (video) {
+      resultDiv.innerHTML += `
+        <p class='text-cyan-300 font-semibold mt-6 mb-2'>🎬 Video Tanpa Watermark:</p>
+        <video controls src="${video}" class="mx-auto rounded-lg w-full max-w-md mb-2"></video>
+        <a href="${video}" download>
+          <button class="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-md text-white">⬇ Download Video No WM</button>
+        </a>
+      `;
+    }
+
+    // Video WM
+    if (videoWM) {
+      resultDiv.innerHTML += `
+        <p class='text-cyan-300 font-semibold mt-6 mb-2'>🎬 Video Watermark:</p>
+        <video controls src="${videoWM}" class="mx-auto rounded-lg w-full max-w-md mb-2"></video>
+        <a href="${videoWM}" download>
+          <button class="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-md text-white">⬇ Download Video WM</button>
+        </a>
+      `;
+    }
+
+    // Audio
+    if (audio) {
+      resultDiv.innerHTML += `
+        <p class='text-cyan-300 font-semibold mt-6 mb-2'>🔊 Audio Only:</p>
+        <audio controls src="${audio}" class="w-full max-w-md mx-auto mb-2"></audio>
+        <a href="${audio}" download>
+          <button class="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-md text-white">⬇ Download Audio</button>
+        </a>
+      `;
+    }
+
+    if (!photo && !video && !videoWM && !audio) {
+      resultDiv.innerHTML = "<p class='text-red-500'>⚠️ Tidak ada media yang bisa didownload.</p>";
+    }
+
+  } catch (err) {
+    console.error(err);
+    resultDiv.innerHTML = "<p class='text-red-500'>❌ Gagal menghubungi API.</p>";
+  }
 }
 
-async function loadChapter(apiLink) {
-  sectionsDiv.style.display = "none";
-  detail.style.display = "none";
-  chapter.style.display = "block";
-  document.getElementById("appTitle").textContent = "Baca Komik";
-  chapter.innerHTML = `<div class="chapter-title">⏳ Memuat...</div>`;
-  const res = await fetch(API + apiLink);
-  const data = await res.json();
-  chapter.innerHTML = `
-    <div class="chapter-title">${data.chapterInfo?.Judul || data.title}</div>
-    <div class="chapter-title">Rilis: ${data.chapterInfo?.["Tanggal Rilis"] || "-"}</div>
-    <div class="images">
-      ${data.images.map(src => `<img src="${src}" alt="page">`).join('') || '<p>❌ Gambar tidak tersedia.</p>'}
-    </div>
-    <div class="nav-buttons">
-      ${data.navigation.prevChapter ? `<button onclick="loadChapter('${data.navigation.prevChapter.apiLink}')">⬅ Sebelumnya</button>` : ""}
-      ${data.navigation.nextChapter ? `<button onclick="loadChapter('${data.navigation.nextChapter.apiLink}')">Selanjutnya ➡</button>` : ""}
-    </div>
-    <div style="text-align:center;margin-top:20px">
-      <button class="back-btn" onclick="loadDetail('${data.navigation.allChapters}')">⬅ Kembali ke Detail</button>
-    </div>
-  `;
+
+
+  
+ 
+
+  <!-- Tambahkan ini di bagian downloadYT() pada script HTML kamu --><script>
+ 
+  /*async function downloadYT() {
+    const url = document.getElementById('urlInput').value.trim();
+    const resultDiv = document.getElementById('result');
+
+    if (!url) {
+      resultDiv.innerHTML = "<p class='text-yellow-400'>⚠️ Link tidak boleh kosong.</p>";
+      return;
+    }
+
+    resultDiv.innerHTML = "<p class='text-gray-400 animate-pulse'>⏳ Mengambil data dari API...</p>";
+
+    const apiBase = "https://f3002982-3fd4-4aa4-8f13-901997cfe69e-00-1er51kqce6gf7.spock.replit.dev";
+    const infoUrl = `${apiBase}/api/info?url=${encodeURIComponent(url)}`;
+
+    try {
+      const res = await fetch(infoUrl);
+      const data = await res.json();
+
+      if (!data || data.error) {
+        throw new Error(data?.error || "Data tidak valid.");
+      }
+
+      const sortedFormats = data.formats.sort((a, b) => {
+        const getRes = q => parseInt(q.replace("p", "")) || 0;
+        return getRes(a.quality) - getRes(b.quality);
+      });
+
+      resultDiv.innerHTML = `
+        <div class="text-left space-y-6">
+          <div class="flex gap-4 items-start flex-col sm:flex-row">
+            <img src="${data.thumbnail}" class="w-40 rounded-lg shadow-lg" />
+            <div>
+              <h3 class="text-lg font-bold text-cyan-300">${data.title}</h3>
+              <p class="text-gray-400 text-sm">Durasi: ${(data.duration / 60).toFixed(1)} menit</p>
+              <p class="text-gray-400 text-sm">Channel: ${data.uploader}</p>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-white font-semibold mb-2">🎬 Pilih Kualitas Video:</h4>
+            <ul class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              ${sortedFormats.map(f => `
+                <li>
+                  <button
+                    onclick="downloadSelected('${url}', '${f.quality}', false)"
+                    class="bg-green-600 hover:bg-green-700 px-3 py-2 w-full rounded text-sm">
+                    ${f.quality} - ${f.filesize ? (f.filesize / 1024 / 1024).toFixed(1) + ' MB' : '?? MB'}
+                  </button>
+                </li>`).join('')}
+            </ul>
+          </div>
+
+          <div class="mt-6">
+            <h4 class="text-white font-semibold mb-2">🎵 Download Audio Only:</h4>
+            <button
+              onclick="downloadSelected('${url}', '', true)"
+              class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-sm">
+              🎧 Download MP3
+            </button>
+          </div>
+
+          <div id="loadingBar" class="mt-6 text-yellow-300 hidden">⏳ Preparing download...</div>
+        </div>
+      `;
+    } catch (err) {
+      console.error('❌ Fetch error:', err);
+      resultDiv.innerHTML = `<p class='text-red-500'>❌ Gagal mengambil data dari API: ${err.message}</p>`;
+    }
+  }
+
+  function downloadSelected(url, quality = "", audioOnly = false) {
+    const loading = document.getElementById("loadingBar");
+    if (loading) loading.classList.remove("hidden");
+
+    const apiBase = "https://f3002982-3fd4-4aa4-8f13-901997cfe69e-00-1er51kqce6gf7.spock.replit.dev";
+    let downloadUrl = `${apiBase}/api/download?url=${encodeURIComponent(url)}`;
+
+    if (audioOnly) {
+      downloadUrl += `&audio_only=true`;
+    } else {
+      downloadUrl += `&quality=${encodeURIComponent(quality)}`;
+    }
+
+    window.location.href = downloadUrl;
+
+    setTimeout(() => {
+      if (loading) loading.classList.add("hidden");
+    }, 4000); // hide loading after 4s
+  }*/
+<!--VERSI YANG ADA YOUTUBE NYA>
+    function checkConnection() {
+  const banner = document.getElementById("offline-banner");
+  if (navigator.onLine) {
+    banner.classList.add("hidden");
+  } else {
+    banner.classList.remove("hidden");
+  }
 }
 
-function backToGallery() {
-  sectionsDiv.style.display = "block";
-  detail.style.display = "none";
-  chapter.style.display = "none";
-  document.getElementById("appTitle").textContent = "Komiku - Web Manga";
-}
-
-loadSections();
-
+checkConnection();
+window.addEventListener("online", checkConnection);
+window.addEventListener("offline", checkConnection);
   </script>
 </body>
 </html>
+ 
