@@ -1,0 +1,1536 @@
+
+<!DOCTYPE html>
+
+<html lang="id" class="dark">
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Downloader - Aditya Jatayu</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Firebase CDN -->
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+  <style>
+
+    .modal-enter {
+
+      opacity: 0;
+
+      transform: scale(0.95);
+
+    }
+
+    .modal-enter-active {
+
+      opacity: 1;
+
+      transform: scale(1);
+
+      transition: all 0.2s ease-out;
+
+    }
+
+    .modal-leave {
+
+      opacity: 1;
+
+      transform: scale(1);
+
+    }
+
+    .modal-leave-active {
+
+      opacity: 0;
+
+      transform: scale(0.95);
+
+      transition: all 0.15s ease-in;
+
+    }
+
+    @keyframes fadeIn {
+
+      0% {
+
+        opacity: 0;
+
+        transform: scale(0.95);
+
+      }
+
+      100% {
+
+        opacity: 1;
+
+        transform: scale(1);
+
+      }
+
+    }
+
+    .animate-fadeIn {
+
+      animation: fadeIn 0.5s ease-out;
+
+    }
+
+    
+    .comment-item {
+  transition: all 0.3s ease;
+}
+
+.comment-item:hover {
+  background-color: rgb(55, 65, 81);
+  transform: translateY(-1px);
+}
+
+.admin-badge {
+  background: linear-gradient(45deg, #fbbf24, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.image-preview {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 8px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.upload-area {
+  border: 2px dashed #4B5563;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.upload-area.dragover {
+  border-color: #06B6D4;
+  background-color: rgba(6, 182, 212, 0.1);
+}
+
+.comment-image {
+  max-width: 300px;
+  max-height: 300px;
+  border-radius: 8px;
+  margin: 10px 0;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.comment-image:hover {
+  transform: scale(1.05);
+}
+  </style>
+
+</head>
+
+<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-start p-6 space-y-6">
+
+  <!-- Navbar -->
+
+  <nav class="w-full fixed top-0 left-0 z-50 backdrop-blur-md bg-white/10 border-b border-white/10 text-white">
+
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+
+      <span class="text-cyan-400 font-bold text-lg">Media Downloader</span>
+
+
+
+      <div class="flex items-center gap-4">
+
+        <!-- Admin Status -->
+
+        <div id="adminStatus" class="hidden">
+
+          <span class="text-green-400 text-sm">👑 Admin Mode</span>
+
+          <button onclick="logoutAdmin()" class="text-red-400 hover:text-red-300 text-sm ml-2">Logout</button>
+
+        </div>
+
+
+
+        <!-- Hamburger button -->
+
+        <button id="navToggle" class="md:hidden text-white focus:outline-none">
+
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+
+            viewBox="0 0 24 24" stroke="currentColor">
+
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+
+              d="M4 6h16M4 12h16M4 18h16" />
+
+          </svg>
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </nav>
+
+
+
+  <!-- Spacer -->
+
+  <div class="h-[64px]"></div>
+
+
+
+  <!-- Admin Login Modal -->
+
+  <div id="adminModal" class="fixed inset-0 bg-black bg-opacity-80 hidden items-center justify-center z-50">
+
+    <div class="bg-gray-800 p-6 rounded-lg max-w-md w-full mx-4">
+
+      <h3 class="text-xl font-bold text-cyan-400 mb-4">🔐 Admin Login</h3>
+
+      <div class="space-y-4">
+
+        <input type="password" id="adminPassword" placeholder="Masukkan password admin" 
+
+               class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white">
+
+        <div class="flex gap-2">
+
+          <button onclick="loginAdmin()" class="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded text-white flex-1">
+
+            Login
+
+          </button>
+
+          <button onclick="closeAdminModal()" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded text-white">
+
+            Batal
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- Side Menu Overlay -->
+
+  <div id="sideNav" class="fixed top-0 right-0 w-full sm:w-64 h-full bg-gray-800/20 backdrop-blur-md text-white transform translate-x-full transition-transform duration-500 ease-in-out z-50">
+
+    <div class="flex justify-between items-center px-4 py-4 border-b border-gray-700">
+
+      <span class="text-cyan-400 font-bold"> Navigasi</span>
+
+      <button onclick="closeNav()" class="text-white hover:text-red-400">
+
+        ✖
+
+      </button>
+
+    </div>
+
+    <div class="flex flex-col gap-4 px-6 py-6 text-sm font-medium">
+
+      <a href="https://adityajatayu.my.id/" target="_blank" class="hover:text-cyan-400 transition">Portfolio</a>
+
+      <a href="https://katheryne.biz.id/" target="_blank" class="hover:text-cyan-400 transition">Gallery Public</a>
+
+      <a href="https://lastsymphony.github.io/Generator-json-gallery-/" target="_blank" class="hover:text-cyan-400 transition">JSON Gallery Generator</a>
+
+      <a href="https://instagram.com/lastsymph" target="_blank" class="hover:text-cyan-400 transition">Instagram</a>
+
+      <a href="mailto:jatayupaint01@gmail.com" class="hover:text-cyan-400 transition">Email</a>
+
+      <a href="https://github.com/lastsymphony" target="_blank" class="hover:text-cyan-400 transition">GitHub</a>
+
+      <a href="https://m.youtube.com/channel/UC-8aUGvvADFQKWBr6n2-mSg/videos" target="_blank" class="hover:text-cyan-400 transition">YouTube</a>
+
+      
+
+      <!-- Admin Menu -->
+
+      <div class="border-t border-gray-600 pt-4 mt-4">
+
+        <button onclick="showAdminModal()" class="text-yellow-400 hover:text-yellow-300 text-sm">
+
+          🔐 Admin Login
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- Overlay background when menu open -->
+
+  <div id="navBackdrop" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40" onclick="closeNav()"></div>
+
+
+
+  <p class="text-white-400 text-sm mt-1">
+
+    Still under development
+
+  </p>
+
+  <p class="text-gray-400 text-sm mt-1">
+
+    Report bug's on E-mail / Dm Instagram
+
+  </p>
+
+  
+
+  <div class="flex flex-col items-center gap-4 w-full max-w-md">
+
+    <div class="relative w-full">
+
+      <input type="text" id="urlInput" placeholder="Tempel linknya di sini"
+
+        class="w-full px-4 py-2 pr-12 rounded-md bg-gray-800 border border-white-600 focus:outline-none focus:ring-2 focus:ring-cyan-500" />
+
+      
+
+      <button onclick="pasteFromClipboard()" class="absolute inset-y-0 right-0 flex items-center px-3 text-cyan-400 hover:text-white">
+
+        <!-- SVG Icon Clipboard -->
+
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+
+          viewBox="0 0 24 24" stroke="currentColor">
+
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+
+            d="M8 6H5a2 2 0 00-2 2v10a2 2 0 002 2h11a2 2 0 002-2v-3m-4-13h6a2 2 0 012 2v6m-6-8v4a2 2 0 002 2h4" />
+
+        </svg>
+
+      </button>
+
+    </div>
+
+
+
+    <div class="flex flex-wrap justify-center gap-3">
+
+      <button onclick="downloadIG()"
+
+        class="bg-cyan-500 hover:bg-cyan-600 transition text-white px-6 py-2 rounded-md font-medium">
+
+        Download Instagram
+
+      </button>
+
+      
+
+      <button onclick="downloadFB()"
+
+        class="bg-blue-500 hover:bg-blue-600 transition text-white px-6 py-2 rounded-md font-medium">
+
+        Download Facebook
+
+      </button>
+
+
+
+      <button onclick="downloadTT()"
+
+        class="bg-pink-500 hover:bg-pink-600 transition text-white px-6 py-2 rounded-md font-medium">
+
+        Download Tiktok
+
+      </button>
+
+
+
+      <button onclick="resetForm()"
+
+        class="bg-red-500 hover:bg-red-600 transition text-white px-6 py-2 rounded-md font-medium">
+
+        Reset
+
+      </button>
+
+    </div>
+
+  </div>
+
+
+
+  <div id="result" class="transition-all duration-500 ease-in-out w-full max-w-3xl space-y-8 mt-6 text-center"></div>
+
+
+
+  <!-- Modal -->
+
+  <div id="imgModal" class="fixed inset-0 bg-black bg-opacity-80 hidden items-center justify-center z-50">
+
+    <div class="relative">
+
+      <img id="modalImg" src="" class="max-w-[90vw] max-h-[90vh] rounded-lg shadow-lg" />
+
+      <button onclick="closeModal()" class="absolute top-2 right-2 text-white bg-gray-800 hover:bg-gray-700 p-2 rounded-full">✖</button>
+
+    </div>
+
+  </div>
+
+  
+
+  <!-- Tutorial Penggunaan -->
+
+  <section class="w-full max-w-2xl text-left mt-12 p-6 bg-gray-800 border border-gray-700 rounded-lg shadow-lg">
+
+    <h2 class="text-xl font-semibold text-cyan-400 mb-3">📌 Cara Menggunakan</h2>
+
+    <ol class="list-decimal list-inside text-gray-300 space-y-2 text-sm leading-relaxed">
+
+      <li>Buka aplikasi <span class="text-white font-medium">Instagram</span>, <span class="text-white font-medium">Facebook</span>, atau <span class="text-white font-medium">TikTok</span>.</li>
+
+      <li>Salin tautan (link) dari media yang ingin kamu download.</li>
+
+      <li>Tempelkan link tersebut di kolom input di atas atau juga bisa tekan tombol disamping nya.</li>
+
+      <li>Pilih tombol sesuai platform:
+
+        <span class="text-cyan-400">Download</span> untuk Instagram,
+
+        <span class="text-blue-400">Download Facebook</span>, atau
+
+        <span class="text-pink-400">Download Tiktok</span>.
+
+      </li>
+
+      <li>Tunggu beberapa detik hingga media ditampilkan.</li>
+
+      <li>Tekan tombol <span class="text-green-400">⬇ Download</span> di bawah media untuk menyimpannya.</li>
+
+    </ol>
+
+  </section>
+
+
+
+  <!-- Kolom Komentar Realtime Firebase -->
+
+  <section class="w-full max-w-2xl text-left mt-12 p-6 bg-gray-800 border border-gray-700 rounded-lg shadow-lg">
+
+    <h2 class="text-xl font-semibold text-cyan-400 mb-3">💬 Komentar Pengunjung</h2>
+
+
+
+    <div class="mb-6 space-y-3">
+  <input type="text" id="usernameInput" placeholder="Nama kamu..."
+    class="bg-gray-700 border border-gray-600 text-white p-2 rounded w-full">
+  
+  <div class="flex gap-2">
+    <input type="text" id="commentInput" placeholder="Tulis komentar..."
+      class="bg-gray-700 border border-gray-600 text-white p-2 rounded flex-1">
+    <button onclick="sendComment()" class="bg-cyan-600 text-white px-4 py-2 rounded">Kirim</button>
+  </div>
+  
+  <!-- Area Upload Gambar -->
+  <div class="upload-area bg-gray-700 border border-gray-600" id="uploadArea">
+    <div class="flex flex-col items-center gap-2">
+      <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+      </svg>
+      <span class="text-gray-400 text-sm">Klik atau seret gambar ke sini (Max 200MB)</span>
+      <input type="file" id="imageInput" accept="image/*" style="display: none;">
+      <button type="button" onclick="document.getElementById('imageInput').click()" 
+        class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm">
+        📷 Pilih Gambar
+      </button>
+    </div>
+  </div>
+  
+  <!-- Preview gambar -->
+  <div id="imagePreview" class="hidden">
+    <img id="previewImg" class="image-preview" />
+    <button onclick="removeImage()" class="text-red-400 hover:text-red-500 text-sm ml-2">❌ Hapus</button>
+  </div>
+  
+  <!-- Loading indicator -->
+  <div id="uploadLoading" class="hidden text-center">
+    <span class="text-cyan-400">📤 Mengupload ke Catbox...</span>
+  </div>
+</div>
+
+
+    <!-- Admin Controls -->
+
+    <div id="adminControls" class="hidden mb-4 p-3 bg-gray-700 rounded border border-yellow-600">
+
+      <h3 class="text-yellow-400 font-bold mb-2">👑 Admin Controls</h3>
+
+      <div class="flex gap-2">
+
+        <button onclick="clearAllComments()" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm">
+
+          🗑️ Hapus Semua Komentar
+
+        </button>
+
+        <button onclick="toggleModeration()" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm">
+
+          🔒 Mode Moderasi
+
+        </button>
+
+      </div>
+
+    </div>
+
+
+
+    <div id="commentList" class="space-y-3"></div>
+
+  </section>
+
+
+
+  <!--footer-->
+
+  <footer class="mt-10 w-full border-t border-gray-700 pt-6 pb-4 text-center text-sm text-gray-400">
+
+    Dibuat dengan ❤️ oleh <span class="text-cyan-400 font-medium">Aditya Jatayu </span> · © 2025
+
+  </footer>
+
+
+
+  <script>
+
+    // Konfigurasi Firebase
+
+    const firebaseConfig = {
+
+      apiKey: "AIzaSyBCpv7fpYBwtwUVXyAv5vnL1QNCmo-862M",
+
+      authDomain: "downloader-cf6a9.firebaseapp.com",
+
+      databaseURL: "https://downloader-cf6a9-default-rtdb.firebaseio.com",
+
+      projectId: "downloader-cf6a9",
+
+      storageBucket: "downloader-cf6a9.appspot.com",
+
+      messagingSenderId: "987720125972",
+
+      appId: "1:987720125972:web:0a41dadbbd1410909ae101",
+
+      measurementId: "G-BH3EFD5T92"
+
+    };
+
+
+
+    // Inisialisasi Firebase
+
+    firebase.initializeApp(firebaseConfig);
+
+    const db = firebase.database();
+
+
+
+// Admin Configuration - Password sudah di-hash
+const ADMIN_PASSWORD_HASH = "a8b7c6d5e4f3"; // Ganti dengan hash password kamu
+let isAdmin = false;
+
+function simpleHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(16);
+}
+
+
+    // Load admin status from localStorage
+
+    if (localStorage.getItem('adminLoggedIn') === 'true') {
+
+      isAdmin = true;
+
+      showAdminInterface();
+
+    }
+
+
+
+    // Admin Functions
+
+    function showAdminModal() {
+
+      document.getElementById('adminModal').classList.remove('hidden');
+
+      document.getElementById('adminModal').classList.add('flex');
+
+    }
+
+
+
+    function closeAdminModal() {
+
+      document.getElementById('adminModal').classList.add('hidden');
+
+      document.getElementById('adminModal').classList.remove('flex');
+
+      document.getElementById('adminPassword').value = '';
+
+    }
+
+
+
+    function loginAdmin() {
+  const password = document.getElementById('adminPassword').value;
+  const hashedInput = simpleHash(password);
+  
+  if (hashedInput === ADMIN_PASSWORD_HASH) {
+    isAdmin = true;
+    localStorage.setItem('adminLoggedIn', 'true');
+    showAdminInterface();
+    closeAdminModal();
+    alert('✅ Login admin berhasil!');
+  } else {
+    alert('❌ Password admin salah!');
+  }
+  
+  document.getElementById('adminPassword').value = '';
+}
+
+
+    function logoutAdmin() {
+
+      isAdmin = false;
+
+      localStorage.removeItem('adminLoggedIn');
+
+      hideAdminInterface();
+
+      alert('👋 Logout admin berhasil!');
+
+    }
+
+
+
+    function showAdminInterface() {
+
+      document.getElementById('adminStatus').classList.remove('hidden');
+
+      document.getElementById('adminControls').classList.remove('hidden');
+
+      // Refresh comment list to show admin buttons
+
+      refreshCommentList();
+
+    }
+
+
+
+    function hideAdminInterface() {
+
+      document.getElementById('adminStatus').classList.add('hidden');
+
+      document.getElementById('adminControls').classList.add('hidden');
+
+      // Refresh comment list to hide admin buttons
+
+      refreshCommentList();
+
+    }
+
+
+
+    function clearAllComments() {
+
+      if (confirm('⚠️ Yakin ingin menghapus SEMUA komentar? Tindakan ini tidak dapat dibatalkan!')) {
+
+        db.ref('comments').remove()
+
+          .then(() => {
+
+            document.getElementById('commentList').innerHTML = '';
+
+            alert('✅ Semua komentar berhasil dihapus!');
+
+          })
+
+          .catch((err) => {
+
+            console.error('Error:', err);
+
+            alert('❌ Gagal menghapus komentar!');
+
+          });
+
+      }
+
+    }
+
+
+
+    function toggleModeration() {
+
+      alert('🔒 Fitur moderasi akan segera hadir!');
+
+    }
+
+
+
+    function refreshCommentList() {
+
+      document.getElementById('commentList').innerHTML = '';
+
+      // Re-fetch all comments to show/hide admin buttons
+
+      db.ref('comments').once('value', (snapshot) => {
+
+        snapshot.forEach((childSnapshot) => {
+
+          displayComment(childSnapshot.key, childSnapshot.val());
+
+        });
+
+      });
+
+    }
+
+
+
+    // Updated displayComment function
+function displayComment(key, data) {
+  const wrapper = document.createElement('div');
+  wrapper.className = "comment-item p-3 bg-gray-700 rounded border border-gray-600 space-y-2";
+  wrapper.id = `comment-${key}`;
+
+  const messageDiv = document.createElement('div');
+  const adminBadge = data.isAdmin ? '<span class="text-yellow-400 text-xs">👑 Admin</span>' : '';
+  
+  // Tambahkan gambar jika ada
+  const imageHtml = data.imageUrl ? 
+    `<img src="${data.imageUrl}" onclick="showModal('${data.imageUrl}')" class="comment-image" alt="Comment image" />` : '';
+  
+  messageDiv.innerHTML = `
+    <div class="flex items-center gap-2 mb-1">
+      <span class="text-cyan-400 font-medium">${data.username}</span>
+      ${adminBadge}
+      <span class="text-gray-500 text-xs">${new Date(data.time).toLocaleString()}</span>
+    </div>
+    <div class="text-white" id="text-${key}">${data.message}</div>
+    ${imageHtml}
+  `;
+
+  const actionDiv = document.createElement('div');
+  actionDiv.className = "flex gap-3 text-sm mt-2";
+
+  const userComments = JSON.parse(localStorage.getItem('userComments') || '[]');
+  const canDelete = isAdmin || userComments.includes(key);
+
+  let actionButtons = '';
+  
+  if (userComments.includes(key) || isAdmin) {
+    actionButtons += `<button onclick="editComment('${key}', '${data.message.replace(/'/g, "\\'")}')" class="text-yellow-400 hover:text-yellow-500">✏️ Edit</button>`;
+  }
+
+  if (canDelete) {
+    const deleteText = isAdmin ? '👑 Hapus' : '🗑️ Hapus';
+    actionButtons += `<button onclick="deleteComment('${key}')" class="text-red-400 hover:text-red-600">${deleteText}</button>`;
+  }
+
+  actionDiv.innerHTML = actionButtons;
+
+  wrapper.appendChild(messageDiv);
+  wrapper.appendChild(actionDiv);
+  document.getElementById('commentList').appendChild(wrapper);
+}
+
+
+
+    // Navigation Functions
+
+    const navToggle = document.getElementById("navToggle");
+
+    const sideNav = document.getElementById("sideNav");
+
+    const backdrop = document.getElementById("navBackdrop");
+
+
+
+    navToggle.addEventListener("click", () => {
+
+      sideNav.classList.remove("translate-x-full");
+
+      sideNav.classList.add("translate-x-0");
+
+      backdrop.classList.remove("hidden");
+
+    });
+
+
+
+    function closeNav() {
+
+      sideNav.classList.remove("translate-x-0");
+
+      sideNav.classList.add("translate-x-full");
+
+      backdrop.classList.add("hidden");
+
+    }
+
+
+
+    // Clipboard Function
+
+    async function pasteFromClipboard() {
+
+      try {
+
+        const text = await navigator.clipboard.readText();
+
+        document.getElementById('urlInput').value = text;
+
+      } catch (err) {
+
+        alert("kasih izin akses clipboard dulu bang.");
+
+        console.error(err);
+
+      }
+
+    }
+
+
+
+    // Instagram Download Function
+
+    async function downloadIG() {
+
+      const url = document.getElementById('urlInput').value.trim();
+
+      const resultDiv = document.getElementById('result');
+
+      if (!url) return resultDiv.innerHTML = "<p class='text-yellow-400'>⚠️ Link tidak boleh kosong.</p>";
+
+
+
+      resultDiv.innerHTML = "<p class='text-gray-400 animate-pulse'>⏳ Mengambil data...</p>";
+
+
+
+      const encodedKey = "S3lUeFI1cEhhRW4y"; 
+
+      const getAPIKey = () => atob("S3lU" + "eFI1" + "cEhh" + "RW4y");
+
+      const apiKey = getAPIKey();
+
+      const apiUrl = `https://api.neoxr.eu/api/ig?url=${encodeURIComponent(url)}&apikey=${apiKey}`;
+
+      
+
+      try {
+
+        const res = await fetch(apiUrl);
+
+        const data = await res.json();
+
+
+
+        if (!data.status || !data.data || data.data.length === 0) {
+
+          resultDiv.innerHTML = "<p class='text-red-500'>❌ Media tidak ditemukan.</p>";
+
+          return;
+
+        }
+
+
+
+        resultDiv.innerHTML = "";
+
+
+
+        data.data.forEach((media, index) => {
+
+          const mediaUrl = media.url;
+
+          const type = media.type;
+
+
+
+          if (type === "mp4") {
+
+            resultDiv.innerHTML += `
+
+              <div>
+
+                <p class="mb-2 text-cyan-300">Media ${index + 1}:</p>
+
+                <video controls autoplay muted src="${mediaUrl}" class="mx-auto w-full h-auto rounded-lg shadow-lg max-w-screen-sm md:max-w-md"></video>
+
+                <a href="${mediaUrl}" download>
+
+                  <button class="mt-2 bg-cyan-600 hover:bg-cyan-700 transition px-4 py-2 rounded-md">⬇ Download Video ${index + 1}</button>
+
+                </a>
+
+              </div>
+
+            `;
+
+          } else {
+
+            resultDiv.innerHTML += `
+
+              <div>
+
+                <p class="mb-2 text-cyan-300">Media ${index + 1}:</p>
+
+                <img src="${mediaUrl}" onclick="showModal('${mediaUrl}')" class="cursor-pointer w-full h-auto max-w-screen-sm md:max-w-xs mx-auto rounded-lg shadow-lg hover:scale-105 transition" />
+
+                <a href="${mediaUrl}" download>
+
+                  <button class="mt-2 bg-cyan-600 hover:bg-cyan-700 transition px-4 py-2 rounded-md">⬇ Download Gambar ${index + 1}</button>
+
+                </a>
+
+              </div>
+
+            `;
+
+          }
+
+        });
+
+
+
+      } catch (err) {
+
+        console.error(err);
+
+        resultDiv.innerHTML = "<p class='text-red-500'>❌ Gagal menghubungi API.</p>";
+
+      }
+
+    }
+
+
+
+    // Facebook Download Function
+
+    async function downloadFB() {
+
+      const url = document.getElementById('urlInput').value.trim();
+
+      const resultDiv = document.getElementById('result');
+
+      const encodedKey = "S3lUeFI1cEhhRW4y"; 
+
+      const getAPIKey = () => atob("S3lU" + "eFI1" + "cEhh" + "RW4y");
+
+      const apiKey = getAPIKey();
+
+
+
+      if (!url) {
+
+        resultDiv.innerHTML = "<p class='text-yellow-400'>⚠️ Link tidak boleh kosong.</p>";
+
+        return;
+
+      }
+
+
+
+      resultDiv.innerHTML = "<p class='text-gray-400 animate-pulse'>⏳ Mengambil data FB...</p>";
+
+      const apiUrl = `https://api.neoxr.eu/api/fb?url=${encodeURIComponent(url)}&apikey=${apiKey}`;
+
+
+
+      try {
+
+        const res = await fetch(apiUrl);
+
+        const json = await res.json();
+
+
+
+        if (!json.status || !json.data || json.data.length === 0) {
+
+          resultDiv.innerHTML = "<p class='text-red-500'>❌ Video tidak ditemukan atau API key salah.</p>";
+
+          return;
+
+        }
+
+
+
+        resultDiv.innerHTML = "<p class='text-cyan-300 mb-4'>🎥 Video Tersedia:</p>";
+
+
+
+        json.data.forEach((item, index) => {
+
+          resultDiv.innerHTML += `
+
+            <div class="mb-6">
+
+              <p class="text-white font-semibold mb-2">Kualitas: ${item.quality}</p>
+
+              <video controls src="${item.url}" class="mx-auto rounded-lg w-full max-w-md mb-2"></video>
+
+              <a href="${item.url}" download>
+
+                <button class="bg-blue-600 hover:bg-blue-700 transition px-4 py-2 rounded-md text-white">⬇ Download ${item.quality}</button>
+
+              </a>
+
+            </div>
+
+          `;
+
+        });
+
+
+
+      } catch (err) {
+
+        console.error(err);
+
+        resultDiv.innerHTML = "<p class='text-red-500'>❌ Gagal menghubungi API.</p>";
+
+      }
+
+    }
+
+
+
+    // TikTok Download Function
+
+    async function downloadTT() {
+
+      const url = document.getElementById('urlInput').value.trim();
+
+      const resultDiv = document.getElementById('result');
+
+      const encodedKey = "S3lUeFI1cEhhRW4y"; 
+
+      const getAPIKey = () => atob("S3lU" + "eFI1" + "cEhh" + "RW4y");
+
+      const apiKey = getAPIKey();
+
+
+
+      if (!url) {
+
+        resultDiv.innerHTML = "<p class='text-yellow-400'>⚠️ Link tidak boleh kosong.</p>";
+
+        return;
+
+      }
+
+
+
+      resultDiv.innerHTML = "<p class='text-gray-400 animate-pulse'>⏳ Mengambil data TikTok...</p>";
+
+      const apiUrl = `https://api.neoxr.eu/api/tiktok?url=${encodeURIComponent(url)}&apikey=${apiKey}`;
+
+
+
+      try {
+
+        const res = await fetch(apiUrl);
+
+        const json = await res.json();
+
+
+
+        if (!json.status || !json.data) {
+
+          resultDiv.innerHTML = "<p class='text-red-500'>❌ Data tidak valid.</p>";
+
+          return;
+
+        }
+
+
+
+        const { video, videoWM, audio, photo, caption, author } = json.data;
+
+        resultDiv.innerHTML = "";
+
+
+
+        // Caption & author
+
+        if (caption || author?.nickname) {
+
+          resultDiv.innerHTML += `
+
+            <div class="mb-4 text-sm text-gray-300">
+
+              <p class="mb-1">👤 <span class="text-white font-medium">${author?.nickname || 'Pengguna TikTok'}</span></p>
+
+              <p>📝 ${caption || 'Tanpa caption'}</p>
+
+            </div>
+
+          `;
+
+        }
+
+
+
+        // Photo (jika tersedia)
+
+        if (photo && Array.isArray(photo)) {
+
+          resultDiv.innerHTML += `<p class='text-cyan-300 font-semibold mb-2'>📸 Postingan Foto:</p>`;
+
+          photo.forEach((img, index) => {
+
+            resultDiv.innerHTML += `
+
+              <div class="mb-4">
+
+                <img src="${img}" onclick="showModal('${img}')" class="cursor-pointer mx-auto rounded-lg max-w-xs shadow-lg hover:scale-105 transition" />
+
+                <a href="${img}" download>
+
+                  <button class="mt-2 bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded text-white">⬇ Download Gambar ${index + 1}</button>
+
+                </a>
+
+              </div>
+
+            `;
+
+          });
+
+        }
+
+
+
+        // Video No WM
+
+        if (video) {
+
+          resultDiv.innerHTML += `
+
+            <p class='text-cyan-300 font-semibold mt-6 mb-2'>🎬 Video Tanpa Watermark:</p>
+
+            <video controls src="${video}" class="mx-auto rounded-lg w-full max-w-md mb-2"></video>
+
+            <a href="${video}" download>
+
+              <button class="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-md text-white">⬇ Download Video No WM</button>
+
+            </a>
+
+          `;
+
+        }
+
+
+
+        // Video WM
+
+        if (videoWM) {
+
+          resultDiv.innerHTML += `
+
+            <p class='text-cyan-300 font-semibold mt-6 mb-2'>🎬 Video Watermark:</p>
+
+            <video controls src="${videoWM}" class="mx-auto rounded-lg w-full max-w-md mb-2"></video>
+
+            <a href="${videoWM}" download>
+
+              <button class="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-md text-white">⬇ Download Video WM</button>
+
+            </a>
+
+          `;
+
+        }
+
+
+
+        // Audio
+
+        if (audio) {
+
+          resultDiv.innerHTML += `
+
+            <p class='text-cyan-300 font-semibold mt-6 mb-2'>🔊 Audio Only:</p>
+
+            <audio controls src="${audio}" class="w-full max-w-md mx-auto mb-2"></audio>
+
+            <a href="${audio}" download>
+
+              <button class="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-md text-white">⬇ Download Audio</button>
+
+            </a>
+
+          `;
+
+        }
+
+
+
+        if (!photo && !video && !videoWM && !audio) {
+
+          resultDiv.innerHTML = "<p class='text-red-500'>⚠️ Tidak ada media yang bisa didownload.</p>";
+
+        }
+
+
+
+      } catch (err) {
+
+        console.error(err);
+
+        resultDiv.innerHTML = "<p class='text-red-500'>❌ Gagal menghubungi API.</p>";
+
+      }
+
+    }
+
+
+
+    // Modal Functions
+
+    function showModal(url) {
+
+      const modal = document.getElementById("imgModal");
+
+      const img = document.getElementById("modalImg");
+
+      img.src = url;
+
+      modal.classList.remove("hidden");
+
+      modal.classList.add("flex");
+
+    }
+
+
+
+    function closeModal() {
+
+      const modal = document.getElementById("imgModal");
+
+      modal.classList.add("hidden");
+
+      modal.classList.remove("flex");
+
+    }
+
+
+
+    // Reset Form Function
+
+    function resetForm() {
+
+      document.getElementById('urlInput').value = '';
+
+      document.getElementById('result').innerHTML = '';
+
+    }
+
+
+
+// Updated sendComment function
+async function sendComment() {
+  const commentInput = document.getElementById('commentInput');
+  const usernameInput = document.getElementById('usernameInput');
+  const comment = commentInput.value.trim();
+  const username = usernameInput.value.trim();
+  
+  if (comment === "" && !selectedImageFile) {
+    alert("Komentar atau gambar harus diisi!");
+    return;
+  }
+  
+  if (username === "") {
+    alert("Nama tidak boleh kosong!");
+    return;
+  }
+
+  // Show loading jika ada gambar
+  if (selectedImageFile) {
+    uploadLoading.classList.remove('hidden');
+  }
+
+  try {
+    // Upload gambar jika ada
+    if (selectedImageFile) {
+      uploadedImageUrl = await uploadToCatbox(selectedImageFile);
+    }
+
+    const userId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    let userComments = JSON.parse(localStorage.getItem('userComments') || '[]');
+    
+    const commentData = {
+      message: comment,
+      username: username,
+      time: new Date().toISOString(),
+      isAdmin: isAdmin,
+      userId: userId,
+      imageUrl: uploadedImageUrl || null // Tambahkan URL gambar
+    };
+
+    const newCommentRef = db.ref('comments').push();
+    await newCommentRef.set(commentData);
+    
+    // Simpan ID komentar ke localStorage
+    userComments.push(newCommentRef.key);
+    localStorage.setItem('userComments', JSON.stringify(userComments));
+    
+    // Reset form
+    commentInput.value = '';
+    removeImage();
+    
+  } catch (error) {
+    console.error("Error:", error);
+    alert("❌ Gagal mengirim komentar!");
+  } finally {
+    uploadLoading.classList.add('hidden');
+  }
+}
+
+
+    // Updated editComment function (hanya edit teks, gambar tidak bisa diedit)
+function editComment(id, oldMessage) {
+  const userComments = JSON.parse(localStorage.getItem('userComments') || '[]');
+  
+  if (!isAdmin && !userComments.includes(id)) {
+    alert("❌ Kamu hanya bisa edit komentar sendiri!");
+    return;
+  }
+
+  const newMessage = prompt("Edit komentar:", oldMessage);
+  if (newMessage === null || newMessage.trim() === "") return;
+
+  db.ref('comments').child(id).update({ message: newMessage.trim() })
+    .then(() => {
+      const textSpan = document.getElementById(`text-${id}`);
+      if (textSpan) textSpan.textContent = newMessage.trim();
+    })
+    .catch(err => {
+      console.error("Gagal update komentar:", err);
+      alert("❌ Gagal mengupdate komentar!");
+    });
+}
+
+    function deleteComment(commentId) {
+  const userComments = JSON.parse(localStorage.getItem('userComments') || '[]');
+  
+  // Cek permission
+  if (!isAdmin && !userComments.includes(commentId)) {
+    alert("❌ Kamu hanya bisa hapus komentar sendiri!");
+    return;
+  }
+
+  if (confirm("Yakin ingin menghapus komentar ini?")) {
+    db.ref('comments').child(commentId).remove()
+      .then(() => {
+        // Hapus dari localStorage juga
+        const updatedComments = userComments.filter(id => id !== commentId);
+        localStorage.setItem('userComments', JSON.stringify(updatedComments));
+        
+        // Hapus elemen dari DOM
+        const el = document.getElementById(`comment-${commentId}`);
+        if (el) el.remove();
+        console.log("Komentar dihapus:", commentId);
+      })
+      .catch((err) => {
+        console.error("Gagal menghapus komentar:", err);
+        alert("❌ Gagal menghapus komentar.");
+      });
+  }
+}
+
+
+    // Menampilkan Komentar Realtime
+
+    db.ref('comments').on('child_added', (data) => {
+
+      displayComment(data.key, data.val());
+
+    });
+
+
+
+    // Handle comment updates
+
+    db.ref('comments').on('child_changed', (data) => {
+
+      const textSpan = document.getElementById(`text-${data.key}`);
+
+      if (textSpan) {
+
+        textSpan.textContent = data.val().message;
+
+      }
+
+    });
+
+
+
+    // Handle comment deletions
+
+    db.ref('comments').on('child_removed', (data) => {
+
+      const el = document.getElementById(`comment-${data.key}`);
+
+      if (el) el.remove();
+
+    });
+
+
+
+    // Allow admin login with Enter key
+
+    document.getElementById('commentInput').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    sendComment();
+  }
+});
+
+document.getElementById('usernameInput').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    document.getElementById('commentInput').focus();
+  }
+});
+
+// Catbox API Configuration (tidak perlu API key)
+
+let selectedImageFile = null;
+let uploadedImageUrl = null;
+
+// Setup drag and drop
+const uploadArea = document.getElementById('uploadArea');
+const imageInput = document.getElementById('imageInput');
+const imagePreview = document.getElementById('imagePreview');
+const previewImg = document.getElementById('previewImg');
+const uploadLoading = document.getElementById('uploadLoading');
+
+// Drag and drop handlers
+uploadArea.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  uploadArea.classList.add('dragover');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+  uploadArea.classList.remove('dragover');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+  
+  const files = e.dataTransfer.files;
+  if (files.length > 0) {
+    handleImageSelect(files[0]);
+  }
+});
+
+// Click handler untuk upload area
+uploadArea.addEventListener('click', () => {
+  imageInput.click();
+});
+
+// File input handler
+imageInput.addEventListener('change', (e) => {
+  if (e.target.files.length > 0) {
+    handleImageSelect(e.target.files[0]);
+  }
+});
+
+// Handle image selection
+function handleImageSelect(file) {
+  // Validasi file
+  if (!file.type.startsWith('image/')) {
+    alert('❌ File harus berupa gambar!');
+    return;
+  }
+  
+  // Validasi ukuran (max 200MB sesuai limit Catbox)
+  if (file.size > 200 * 1024 * 1024) {
+    alert('❌ Ukuran gambar maksimal 200MB!');
+    return;
+  }
+  
+  selectedImageFile = file;
+  
+  // Show preview
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    previewImg.src = e.target.result;
+    imagePreview.classList.remove('hidden');
+  };
+  reader.readAsDataURL(file);
+}
+
+// Remove selected image
+function removeImage() {
+  selectedImageFile = null;
+  uploadedImageUrl = null;
+  imagePreview.classList.add('hidden');
+  imageInput.value = '';
+}
+
+// Upload image to Catbox
+async function uploadToCatbox(imageFile) {
+  const formData = new FormData();
+  formData.append('reqtype', 'fileupload');
+  formData.append('fileToUpload', imageFile);
+  
+  try {
+    const response = await fetch('https://catbox.moe/user/api.php', {
+      method: 'POST',
+      body: formData
+    });
+    
+    const result = await response.text();
+    
+    if (result.startsWith('https://files.catbox.moe/')) {
+      return result.trim();
+    } else {
+      throw new Error('Upload gagal: ' + result);
+    }
+  } catch (error) {
+    console.error('Error uploading to Catbox:', error);
+    throw error;
+  }
+}
+  </script>
+
+</body>
+
+</html>
