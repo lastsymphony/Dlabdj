@@ -289,8 +289,7 @@
           console.error('Failed to copy: ', err);
         });
     }
-
-    function renderGallery() {
+function renderGallery() {
   const data = paginate(filteredData, currentPage, perPage);
   gallery.innerHTML = '';
   gallery.className = layout === 'grid'
@@ -307,54 +306,36 @@
     const url = item.url.trim();
     let mediaContent = '';
 
-    // Media type handling with lazy loading
+    // Video with autoplay (muted)
     if (item.type === 'video' || url.match(/\.(mp4|webm)$/i)) {
-      // Di dalam fungsi renderGallery() - bagian video
-mediaContent = `
-  <div class="relative aspect-video bg-gray-200 dark:bg-gray-700">
-    <video 
-      loading="lazy"
-      autoplay
-      muted
-      loop
-      playsinline
-      preload="auto"
-      poster="${item.thumbnail || ''}"
-      class="w-full h-full object-cover rounded-t-xl"
-      aria-label="${item.title || 'Video gallery'}"
-      onclick="openModal(this)"
-      data-src="${url}">
-      <source data-src="${url}" type="video/mp4">
-      Your browser does not support the video tag.
-    </video>
-    <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-      <div class="w-16 h-16 bg-black/50 rounded-full flex items-center justify-center">
-        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-      </div>
-    </div>
-  </div>
-`;
-
-// Fungsi untuk mengatasi kebijakan autoplay
-function handleAutoplay() {
-  document.querySelectorAll('video[autoplay]').forEach(video => {
-    const promise = video.play();
-    
-    if (promise !== undefined) {
-      promise.catch(error => {
-        // Autoplay tidak diizinkan, tampilkan tombol play
-        video.removeAttribute('autoplay');
-        video.controls = true;
-      });
+      mediaContent = `
+        <div class="relative aspect-video bg-gray-200 dark:bg-gray-700">
+          <video 
+            loading="lazy"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="auto"
+            poster="${item.thumbnail || ''}"
+            class="w-full h-full object-cover rounded-t-xl"
+            aria-label="${item.title || 'Video gallery'}"
+            onclick="openModal(this)"
+            data-src="${url}">
+            <source data-src="${url}" type="video/mp4">
+            Your browser does not support HTML5 video.
+          </video>
+          <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300 bg-black/20">
+            <div class="w-16 h-16 bg-black/50 rounded-full flex items-center justify-center">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      `;
     }
-  });
-}
-
-// Panggil handleAutoplay() setelah render
-handleAutoplay();
+    // Audio with manual play
     else if (item.type === 'audio' || url.match(/\.(mp3|wav|ogg)$/i)) {
       mediaContent = `
         <div class="relative p-4 bg-gray-100 dark:bg-gray-700">
@@ -370,10 +351,11 @@ handleAutoplay();
               </div>
             </div>
           </div>
-          <audio class="hidden" data-src="${url}"></audio>
+          <audio preload="metadata" data-src="${url}"></audio>
         </div>
       `;
     }
+    // Documents
     else if (item.type === 'document' || url.match(/\.(pdf|html|txt|py|md|xlsx?)$/i)) {
       mediaContent = `
         <div class="aspect-[4/3] bg-gray-100 dark:bg-gray-700 flex items-center justify-center rounded-t-xl">
@@ -386,6 +368,7 @@ handleAutoplay();
         </div>
       `;
     } 
+    // Images
     else {
       mediaContent = `
         <div class="aspect-square bg-gray-200 dark:bg-gray-700 relative">
@@ -410,12 +393,12 @@ handleAutoplay();
         <div class="mt-2 flex justify-between items-center">
           <span class="text-xs text-gray-500 dark:text-gray-400">${timeAgo(item.upload)}</span>
           <div class="flex gap-2">
-            <button onclick="copyToClipboard('${url}')" class="p-1 text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition">
+            <button onclick="copyToClipboard('${url}')" class="p-1 text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition" aria-label="Copy URL">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
               </svg>
             </button>
-            <button onclick="downloadMedia('${url}')" class="p-1 text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition">
+            <button onclick="downloadMedia('${url}')" class="p-1 text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition" aria-label="Download">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
               </svg>
@@ -428,50 +411,51 @@ handleAutoplay();
     gallery.appendChild(card);
   });
 
-  // Initialize lazy loading and media players
+  // Initialize components
   initLazyLoad();
   initAudioPlayers();
+  initVideoAutoplay();
   renderPagination(filteredData);
 }
 
-// Helper functions for media handling
-function initLazyLoad() {
-  const lazyMedia = document.querySelectorAll('[data-src]');
-  
-  const lazyLoadObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const element = entry.target;
-        if (element.tagName === 'IMG') {
-          element.src = element.dataset.src;
-        } else if (element.tagName === 'VIDEO') {
-          const source = element.querySelector('source');
-          source.src = source.dataset.src;
-          element.load();
-        }
-        lazyLoadObserver.unobserve(element);
-      }
-    });
-  }, { rootMargin: '200px' });
-
-  lazyMedia.forEach(media => {
-    lazyLoadObserver.observe(media);
+// Video autoplay handler
+function initVideoAutoplay() {
+  document.querySelectorAll('video[autoplay]').forEach(video => {
+    const promise = video.play();
+    
+    if (promise !== undefined) {
+      promise.catch(error => {
+        // Fallback if autoplay is blocked
+        video.controls = true;
+        const overlay = video.parentElement.querySelector('.absolute');
+        if (overlay) overlay.classList.remove('opacity-0');
+      });
+    }
   });
 }
 
+// Audio player controller
 function initAudioPlayers() {
   document.querySelectorAll('.audio-play-btn').forEach(btn => {
     btn.addEventListener('click', function() {
-      const audioElement = this.closest('article').querySelector('audio');
-      if (audioElement.paused) {
-        audioElement.play();
+      const audio = this.closest('article').querySelector('audio');
+      if (!audio.src) audio.src = audio.dataset.src;
+      
+      if (audio.paused) {
+        audio.play();
         this.innerHTML = `
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
         `;
+        
+        // Update progress bar
+        audio.addEventListener('timeupdate', function() {
+          const progress = (audio.currentTime / audio.duration) * 100;
+          audio.closest('article').querySelector('.audio-progress').style.width = `${progress}%`;
+        });
       } else {
-        audioElement.pause();
+        audio.pause();
         this.innerHTML = `
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
@@ -482,6 +466,27 @@ function initAudioPlayers() {
   });
 }
 
+// Lazy loading implementation
+function initLazyLoad() {
+  const lazyMedia = document.querySelectorAll('[data-src]');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const element = entry.target;
+        if (element.tagName === 'IMG') {
+          element.src = element.dataset.src;
+        } else if (element.tagName === 'VIDEO') {
+          const source = element.querySelector('source');
+          source.src = source.dataset.src;
+          element.load();
+        }
+        observer.unobserve(element);
+      }
+    });
+  }, { rootMargin: '200px' });
+
+  lazyMedia.forEach(media => observer.observe(media));
+}
 
     function searchImages() {
       const keyword = searchInput.value.toLowerCase();
