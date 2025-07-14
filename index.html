@@ -306,7 +306,6 @@ function renderGallery() {
     const url = item.url.trim();
     let mediaContent = '';
 
-    // Video with autoplay (muted)
     if (item.type === 'video' || url.match(/\.(mp4|webm)$/i)) {
       mediaContent = `
         <div class="relative aspect-video bg-gray-200 dark:bg-gray-700">
@@ -334,9 +333,7 @@ function renderGallery() {
           </div>
         </div>
       `;
-    }
-    // Audio with manual play
-    else if (item.type === 'audio' || url.match(/\.(mp3|wav|ogg)$/i)) {
+    } else if (item.type === 'audio' || url.match(/\.(mp3|wav|ogg)$/i)) {
       mediaContent = `
         <div class="relative p-4 bg-gray-100 dark:bg-gray-700">
           <div class="flex items-center gap-4">
@@ -354,9 +351,7 @@ function renderGallery() {
           <audio preload="metadata" data-src="${url}"></audio>
         </div>
       `;
-    }
-    // Documents
-    else if (item.type === 'document' || url.match(/\.(pdf|html|txt|py|md|xlsx?)$/i)) {
+    } else if (item.type === 'document' || url.match(/\.(pdf|html|txt|py|md|xlsx?)$/i)) {
       mediaContent = `
         <div class="aspect-[4/3] bg-gray-100 dark:bg-gray-700 flex items-center justify-center rounded-t-xl">
           <div class="text-center p-6">
@@ -367,9 +362,7 @@ function renderGallery() {
           </div>
         </div>
       `;
-    } 
-    // Images
-    else {
+    } else {
       mediaContent = `
         <div class="aspect-square bg-gray-200 dark:bg-gray-700 relative">
           <img 
@@ -411,81 +404,11 @@ function renderGallery() {
     gallery.appendChild(card);
   });
 
-  // Initialize components
+  // Inisialisasi ulang interaksi setelah elemen masuk DOM
   initLazyLoad();
-  initAudioPlayers();
+  initAudioPlayers();  // <- Pastikan dipanggil ulang di sini
   initVideoAutoplay();
   renderPagination(filteredData);
-}
-
-// Video autoplay handler
-function initVideoAutoplay() {
-  document.querySelectorAll('video[autoplay]').forEach(video => {
-    const promise = video.play();
-    
-    if (promise !== undefined) {
-      promise.catch(error => {
-        // Fallback if autoplay is blocked
-        video.controls = true;
-        const overlay = video.parentElement.querySelector('.absolute');
-        if (overlay) overlay.classList.remove('opacity-0');
-      });
-    }
-  });
-}
-
-// Audio player controller
-function initAudioPlayers() {
-  document.querySelectorAll('.audio-play-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const audio = this.closest('article').querySelector('audio');
-      if (!audio.src) audio.src = audio.dataset.src;
-      
-      if (audio.paused) {
-        audio.play();
-        this.innerHTML = `
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-        `;
-        
-        // Update progress bar
-        audio.addEventListener('timeupdate', function() {
-          const progress = (audio.currentTime / audio.duration) * 100;
-          audio.closest('article').querySelector('.audio-progress').style.width = `${progress}%`;
-        });
-      } else {
-        audio.pause();
-        this.innerHTML = `
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-          </svg>
-        `;
-      }
-    });
-  });
-}
-
-// Lazy loading implementation
-function initLazyLoad() {
-  const lazyMedia = document.querySelectorAll('[data-src]');
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const element = entry.target;
-        if (element.tagName === 'IMG') {
-          element.src = element.dataset.src;
-        } else if (element.tagName === 'VIDEO') {
-          const source = element.querySelector('source');
-          source.src = source.dataset.src;
-          element.load();
-        }
-        observer.unobserve(element);
-      }
-    });
-  }, { rootMargin: '200px' });
-
-  lazyMedia.forEach(media => observer.observe(media));
 }
 
     function searchImages() {
