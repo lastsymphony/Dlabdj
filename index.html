@@ -310,18 +310,14 @@ function renderGallery() {
       mediaContent = `
         <div class="relative aspect-video bg-gray-200 dark:bg-gray-700">
           <video 
-  loading="lazy"
-  controls
   muted
   playsinline
+  loop
   preload="metadata"
-  poster="${item.thumbnail || ''}"
-  class="w-full h-full object-cover rounded-t-xl z-10"
-  aria-label="${item.title || 'Video gallery'}"
-  data-src="${url}">
-            <source data-src="${url}" type="video/mp4">
-            Your browser does not support HTML5 video.
-          </video>
+  class="video-autoplay w-full h-full object-cover rounded-t-xl"
+  aria-label="${item.title || 'Video gallery'}">
+  <source data-src="${url}" type="video/mp4">
+</video>
         </div>
       `;
     } else if (item.type === 'audio' || url.match(/\.(mp3|wav|ogg)$/i)) {
@@ -404,17 +400,31 @@ function renderGallery() {
 
 // Video autoplay handler
 function initVideoAutoplay() {
-  document.querySelectorAll('video[autoplay]').forEach(video => {
-    const promise = video.play();
-    
-    if (promise !== undefined) {
-      promise.catch(error => {
-        // Fallback if autoplay is blocked
-        video.controls = true;
-        const overlay = video.parentElement.querySelector('.absolute');
-        if (overlay) overlay.classList.remove('opacity-0');
-      });
+  document.querySelectorAll('video.video-autoplay').forEach(video => {
+    const source = video.querySelector('source');
+
+    // Jika belum dimuat, kita isi dan load video
+    if (source && source.dataset.src) {
+      source.src = source.dataset.src;
+      video.load();
+
+      // Hapus data-src agar tidak mengulang
+      delete source.dataset.src;
     }
+
+    // Autoplay video secara manual setelah loadedmetadata
+    video.addEventListener('loadedmetadata', () => {
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            video.controls = true; // aktifkan kontrol setelah berhasil play
+          })
+          .catch(() => {
+            video.controls = true; // tetap aktifkan kontrol jika autoplay gagal
+          });
+      }
+    });
   });
 }
 
