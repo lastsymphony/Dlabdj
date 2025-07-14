@@ -55,6 +55,16 @@
     .dark .text-gray-400 {
       color: #a1a1aa;
     }
+    .full-width-card {
+  width: 100%;
+}
+
+.full-width-media video,
+.full-width-media img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
   </style>
 </head>
 <body class="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100">
@@ -109,6 +119,15 @@
               <path d="M4 6h16M4 12h16M4 18h16"/>
             </svg>
           </button>
+          <button 
+  id="fullBtn" 
+  onclick="setLayout('full')" 
+  aria-label="Tampilan penuh"
+  class="p-2 rounded-full">
+  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <path d="M4 4h16v16H4z"/>
+  </svg>
+</button>
         </div>
       </div>
     </div>
@@ -246,15 +265,16 @@
     }
 
     function setLayout(type) {
-      layout = type;
-      updateIconHighlight();
-      renderGallery();
-    }
+  layout = type;
+  updateIconHighlight();
+  renderGallery();
+}
 
     function updateIconHighlight() {
-      gridBtn.classList.toggle('active-icon', layout === 'grid');
-      listBtn.classList.toggle('active-icon', layout === 'list');
-    }
+  gridBtn.classList.toggle('active-icon', layout === 'grid');
+  listBtn.classList.toggle('active-icon', layout === 'list');
+  fullBtn.classList.toggle('active-icon', layout === 'full');
+}
 
     function paginate(data, page, perPage) {
       const start = (page - 1) * perPage;
@@ -371,12 +391,27 @@
 function renderGallery() {
   const data = paginate(filteredData, currentPage, perPage);
   gallery.innerHTML = '';
-  gallery.className = layout === 'grid'
-    ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'
-    : 'flex flex-col gap-6';
+  if (layout === 'grid') {
+  gallery.className = 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6';
+} else if (layout === 'list') {
+  gallery.className = 'flex flex-col gap-6';
+} else if (layout === 'full') {
+  gallery.className = 'flex flex-col gap-10';
+}
+
+let cardClass = 'fade-in image-card bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300';
+let mediaWrapperClass = 'relative aspect-video bg-gray-200 dark:bg-gray-700';
+let mediaClass = 'w-full h-full object-cover rounded-t-xl';
+
+if (layout === 'full') {
+  cardClass += ' full-width-card';
+  mediaWrapperClass += ' full-width-media';
+  mediaClass = 'w-full h-auto object-contain';
+}
 
   data.forEach(item => {
     const card = document.createElement('article');
+card.className = cardClass;
     card.className = 'fade-in image-card bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300';
     card.dataset.category = item.category;
     card.dataset.upload = item.upload;
@@ -387,18 +422,19 @@ function renderGallery() {
 
     if (item.type === 'video' || url.match(/\.(mp4|webm)$/i)) {
       mediaContent = `
-        <div class="relative aspect-video bg-gray-200 dark:bg-gray-700">
-          <video 
-  muted
-  playsinline
-  loop
-  preload="metadata"
-  class="video-autoplay w-full h-full object-cover rounded-t-xl"
-  aria-label="${item.title || 'Video gallery'}">
-  <source data-src="${url}" type="video/mp4">
-</video>
-        </div>
-      `;
+  <div class="${mediaWrapperClass}">
+    <video 
+      muted
+      playsinline
+      loop
+      preload="metadata"
+      class="video-autoplay ${mediaClass}"
+      aria-label="${item.title || 'Video gallery'}"
+      onclick="openModal(this)">
+      <source data-src="${url}" type="video/mp4">
+    </video>
+  </div>
+`;
     } else if (item.type === 'audio' || url.match(/\.(mp3|wav|ogg)$/i)) {
       mediaContent = `
         <div class="relative p-4 bg-gray-100 dark:bg-gray-700">
@@ -430,16 +466,16 @@ function renderGallery() {
       `;
     } else {
       mediaContent = `
-        <div class="aspect-square bg-gray-200 dark:bg-gray-700 relative">
-          <img 
-            src="${item.thumbnail || url}" 
-            alt="${item.title || 'Gallery image'}"
-            loading="lazy"
-            class="w-full h-full object-cover rounded-t-xl cursor-pointer"
-            onclick="openModal(this)"
-            data-src="${url}">
-        </div>
-      `;
+  <div class="${mediaWrapperClass}">
+    <img 
+      src="${item.thumbnail || url}" 
+      alt="${item.title || 'Gallery image'}"
+      loading="lazy"
+      class="${mediaClass} cursor-pointer"
+      onclick="openModal(this)"
+      data-src="${url}">
+  </div>
+`;
     }
 
     card.innerHTML = `
