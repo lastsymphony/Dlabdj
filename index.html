@@ -309,29 +309,52 @@
 
     // Media type handling with lazy loading
     if (item.type === 'video' || url.match(/\.(mp4|webm)$/i)) {
-      mediaContent = `
-        <div class="relative aspect-video bg-gray-200 dark:bg-gray-700">
-          <video 
-            loading="lazy"
-            preload="metadata"
-            poster="${item.thumbnail || ''}"
-            class="w-full h-full object-cover rounded-t-xl"
-            aria-label="${item.title || 'Video gallery'}"
-            onclick="openModal(this)"
-            data-src="${url}">
-            <source data-src="${url}" type="video/mp4">
-          </video>
-          <div class="absolute inset-0 flex items-center justify-center">
-            <div class="w-16 h-16 bg-black/50 rounded-full flex items-center justify-center">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-            </div>
-          </div>
-        </div>
-      `;
-    } 
+      // Di dalam fungsi renderGallery() - bagian video
+mediaContent = `
+  <div class="relative aspect-video bg-gray-200 dark:bg-gray-700">
+    <video 
+      loading="lazy"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="auto"
+      poster="${item.thumbnail || ''}"
+      class="w-full h-full object-cover rounded-t-xl"
+      aria-label="${item.title || 'Video gallery'}"
+      onclick="openModal(this)"
+      data-src="${url}">
+      <source data-src="${url}" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+      <div class="w-16 h-16 bg-black/50 rounded-full flex items-center justify-center">
+        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+`;
+
+// Fungsi untuk mengatasi kebijakan autoplay
+function handleAutoplay() {
+  document.querySelectorAll('video[autoplay]').forEach(video => {
+    const promise = video.play();
+    
+    if (promise !== undefined) {
+      promise.catch(error => {
+        // Autoplay tidak diizinkan, tampilkan tombol play
+        video.removeAttribute('autoplay');
+        video.controls = true;
+      });
+    }
+  });
+}
+
+// Panggil handleAutoplay() setelah render
+handleAutoplay();
     else if (item.type === 'audio' || url.match(/\.(mp3|wav|ogg)$/i)) {
       mediaContent = `
         <div class="relative p-4 bg-gray-100 dark:bg-gray-700">
