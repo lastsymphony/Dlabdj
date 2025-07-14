@@ -310,27 +310,18 @@ function renderGallery() {
       mediaContent = `
         <div class="relative aspect-video bg-gray-200 dark:bg-gray-700">
           <video 
-            loading="lazy"
-            autoplay
-            muted
-            loop
-            playsinline
-            preload="auto"
-            poster="${item.thumbnail || ''}"
-            class="w-full h-full object-cover rounded-t-xl"
-            aria-label="${item.title || 'Video gallery'}"
-            onclick="openModal(this)"
-            data-src="${url}">
+  loading="lazy"
+  controls
+  muted
+  playsinline
+  preload="metadata"
+  poster="${item.thumbnail || ''}"
+  class="w-full h-full object-cover rounded-t-xl z-10"
+  aria-label="${item.title || 'Video gallery'}"
+  data-src="${url}">
             <source data-src="${url}" type="video/mp4">
             Your browser does not support HTML5 video.
           </video>
-          <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300 bg-black/20">
-            <div class="w-16 h-16 bg-black/50 rounded-full flex items-center justify-center">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-              </svg>
-            </div>
-          </div>
         </div>
       `;
     } else if (item.type === 'audio' || url.match(/\.(mp3|wav|ogg)$/i)) {
