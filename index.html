@@ -262,21 +262,100 @@
     }
 
     function renderPagination(data) {
-      const totalPages = Math.ceil(data.length / perPage);
-      pagination.innerHTML = '';
-      for (let i = 1; i <= totalPages; i++) {
-        const btn = document.createElement('button');
-        btn.textContent = i;
-        btn.className = `px-3 py-1 rounded ${i === currentPage ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700 dark:text-white'}`;
-        btn.setAttribute('aria-label', `Halaman ${i}`);
-        btn.onclick = () => {
-          currentPage = i;
-          renderGallery();
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
-        pagination.appendChild(btn);
-      }
+  const totalPages = Math.ceil(data.length / perPage);
+  pagination.innerHTML = '';
+  
+  // Previous button
+  const prevBtn = document.createElement('button');
+  prevBtn.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+    </svg>
+  `;
+  prevBtn.className = `px-3 py-1 rounded ${currentPage === 1 ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed' : 'bg-gray-200 dark:bg-gray-700 hover:bg-indigo-600 hover:text-white'}`;
+  prevBtn.setAttribute('aria-label', 'Previous page');
+  prevBtn.onclick = () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderGallery();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  };
+  pagination.appendChild(prevBtn);
+
+  // Page numbers - show only 3 around current page
+  const startPage = Math.max(1, currentPage - 1);
+  const endPage = Math.min(totalPages, currentPage + 1);
+  
+  if (startPage > 1) {
+    const firstBtn = document.createElement('button');
+    firstBtn.textContent = '1';
+    firstBtn.className = 'px-3 py-1 rounded bg-gray-200 dark:bg-gray-700';
+    firstBtn.onclick = () => {
+      currentPage = 1;
+      renderGallery();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    pagination.appendChild(firstBtn);
+    
+    if (startPage > 2) {
+      const ellipsis = document.createElement('span');
+      ellipsis.textContent = '...';
+      ellipsis.className = 'px-2 flex items-center';
+      pagination.appendChild(ellipsis);
+    }
+  }
+  
+  for (let i = startPage; i <= endPage; i++) {
+    const btn = document.createElement('button');
+    btn.textContent = i;
+    btn.className = `px-3 py-1 rounded ${i === currentPage ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}`;
+    btn.setAttribute('aria-label', `Halaman ${i}`);
+    btn.onclick = () => {
+      currentPage = i;
+      renderGallery();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    pagination.appendChild(btn);
+  }
+  
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) {
+      const ellipsis = document.createElement('span');
+      ellipsis.textContent = '...';
+      ellipsis.className = 'px-2 flex items-center';
+      pagination.appendChild(ellipsis);
+    }
+    
+    const lastBtn = document.createElement('button');
+    lastBtn.textContent = totalPages;
+    lastBtn.className = 'px-3 py-1 rounded bg-gray-200 dark:bg-gray-700';
+    lastBtn.onclick = () => {
+      currentPage = totalPages;
+      renderGallery();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    pagination.appendChild(lastBtn);
+  }
+
+  // Next button
+  const nextBtn = document.createElement('button');
+  nextBtn.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+    </svg>
+  `;
+  nextBtn.className = `px-3 py-1 rounded ${currentPage === totalPages ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed' : 'bg-gray-200 dark:bg-gray-700 hover:bg-indigo-600 hover:text-white'}`;
+  nextBtn.setAttribute('aria-label', 'Next page');
+  nextBtn.onclick = () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderGallery();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+  pagination.appendChild(nextBtn);
+}
 
     function copyToClipboard(text) {
       navigator.clipboard.writeText(text)
