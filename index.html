@@ -2,17 +2,18 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Upload Banyak Gambar & Salin Nama</title>
+  <title>Upload Banyak Gambar & Generate JSON</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background: #f1f1f1; }
     #fileList { margin-top: 20px; }
     .file-item { margin-bottom: 15px; }
     .file-item img { max-width: 150px; display: block; margin-top: 5px; }
     button { margin-top: 10px; padding: 5px 10px; }
-    textarea { width: 100%; height: 100px; margin-top: 10px; }
+    textarea { width: 100%; height: 200px; margin-top: 10px; font-family: monospace; }
     .controls { margin-top: 20px; }
     label { display: block; margin-top: 10px; }
-    input[type="text"], input[type="number"] { padding: 5px; margin-top: 5px; }
+    input[type="text"], input[type="number"] { padding: 5px; margin-top: 5px; width: 300px; }
+    .control-group { margin-bottom: 15px; }
   </style>
 </head>
 <body>
@@ -21,18 +22,27 @@
   <input type="file" id="fileInput" accept="image/*" multiple>
 
   <div class="controls">
-    <label for="imagePath">Path Gambar (contoh: /senjata/b5/)</label>
-    <input type="text" id="imagePath" value="/senjata/b5/">
+    <div class="control-group">
+      <label for="jsonKey">Key JSON (contoh: "senjata")</label>
+      <input type="text" id="jsonKey" value="senjata">
+    </div>
     
-    <label for="rarityValue">Rarity (1-5)</label>
-    <input type="number" id="rarityValue" min="1" max="5" value="5">
+    <div class="control-group">
+      <label for="imagePath">Path Gambar (contoh: /senjata/b5/)</label>
+      <input type="text" id="imagePath" value="/senjata/b5/">
+    </div>
+    
+    <div class="control-group">
+      <label for="rarityValue">Rarity (1-5)</label>
+      <input type="number" id="rarityValue" min="1" max="5" value="5">
+    </div>
   </div>
 
   <div id="fileList"></div>
 
   <button onclick="copyAllNames()">Salin Semua Nama File</button>
   <button onclick="generateJSON()">Generate JSON</button>
-  <textarea id="allFilenames" readonly placeholder="Nama file akan muncul di sini..."></textarea>
+  <textarea id="allFilenames" readonly placeholder="JSON akan muncul di sini..."></textarea>
 
   <script>
     const fileInput = document.getElementById('fileInput');
@@ -40,6 +50,7 @@
     const allFilenames = document.getElementById('allFilenames');
     const imagePathInput = document.getElementById('imagePath');
     const rarityInput = document.getElementById('rarityValue');
+    const jsonKeyInput = document.getElementById('jsonKey');
 
     fileInput.addEventListener('change', function () {
       fileList.innerHTML = '';
@@ -71,6 +82,13 @@
       alert('Semua nama file telah disalin!');
     }
 
+    function generateSlug(name) {
+      return name.toLowerCase()
+        .replace(/[^\w\s]/g, '') // Remove special chars
+        .replace(/\s+/g, '-')    // Replace spaces with -
+        .replace(/-+/g, '-');    // Replace multiple - with single -
+    }
+
     function generateJSON() {
       const files = Array.from(fileInput.files);
       if (files.length === 0) {
@@ -80,17 +98,23 @@
 
       const imagePath = imagePathInput.value;
       const rarity = parseInt(rarityInput.value);
+      const jsonKey = jsonKeyInput.value || 'senjata';
       
-      const jsonData = files.map(file => {
+      const items = files.map(file => {
         // Remove file extension
         const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
         
         return {
           name: fileNameWithoutExt,
+          slug: generateSlug(fileNameWithoutExt),
           rarity: rarity,
           image: imagePath + file.name
         };
       });
+
+      const jsonData = {
+        [jsonKey]: items
+      };
 
       allFilenames.value = JSON.stringify(jsonData, null, 2);
       allFilenames.select();
